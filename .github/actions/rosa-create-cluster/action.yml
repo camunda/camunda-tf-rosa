@@ -75,6 +75,7 @@ runs:
         curl -O "https://mirror.openshift.com/pub/openshift-v4/clients/rosa/${{ inputs.rosa-cli-version }}/rosa-linux.tar.gz"
         tar -xvf rosa-linux.tar.gz
         sudo mv rosa /usr/local/bin/rosa
+        rm -f rosa-linux.tar.gz
         rosa version
 
     - name: Install Terraform
@@ -176,6 +177,7 @@ runs:
         echo "server_api=$server_api"
         echo "server_api=$server_api" >> "$GITHUB_OUTPUT"
 
+        echo "oc login --username '${{ inputs.admin-username }}' --password '${{ inputs.admin-password }}' --server=$server_api" > login_command.txt
         oc login --username "${{ inputs.admin-username }}" --password "${{ inputs.admin-password }}" --server=$server_api
         kubectl config rename-context $(oc config current-context) "${{ inputs.cluster-name }}"
         kubectl config use "${{ inputs.cluster-name }}"
