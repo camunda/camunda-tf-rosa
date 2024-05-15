@@ -74,6 +74,11 @@ jobs:
           aws configure set aws_access_key_id ${{ steps.secrets.outputs.AWS_ACCESS_KEY }} --profile ${{ env.AWS_PROFILE }}
           aws configure set aws_secret_access_key ${{ steps.secrets.outputs.AWS_SECRET_KEY }} --profile ${{ env.AWS_PROFILE }}
           aws configure set region ${{ env.AWS_REGION }} --profile ${{ env.AWS_PROFILE }}
+      
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+         detached: true
 
       - name: Create Cluster
         timeout-minutes: 125
@@ -92,6 +97,6 @@ jobs:
         uses: ./.github/actions/rosa-delete-cluster
         with:
           rh-token: ${{ steps.secrets.outputs.RH_OPENSHIFT_TOKEN }}
-          cluster-name: "${{ steps.ocp_cluster_name.outputs.cluster_name }}"
+          cluster-name: "${{ steps.commit_info.outputs.cluster_name }}"
           aws-region: ${{ env.AWS_REGION }}
           s3-backend-bucket: ${{ env.TF_S3_BUCKET }}
