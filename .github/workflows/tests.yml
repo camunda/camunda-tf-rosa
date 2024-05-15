@@ -1,9 +1,17 @@
 ---
 name: Cluster creation and destruction test
 
-# TODO: align this with EKS current strategy
 on:
-  push:
+    workflow_dispatch:
+    pull_request:
+        # the paths should be synced with ../labeler.yml
+        paths:
+        - modules/fixtures/**
+        - modules/**.tf
+        - .tool-versions
+        - .github/workflows/tests.yml
+        - .github/actions/**
+        - justfile
 
 # limit to a single execution per actor of this workflow
 concurrency:
@@ -13,15 +21,10 @@ env:
   AWS_PROFILE: "infex"
   AWS_REGION: "eu-west-2"
   TF_S3_BUCKET: "camunda-tf-rosa"
-  CLUSTER_NAME: "mycluster"
 
 jobs:
 
-    # TODO: implement same logic as EKS
-  # We can skip some tests using the commit description (skip-tests:NameOfTest1,NameOfTest2) or all tests (skip-tests:all) (see `DEVELOPER.md`)
-  # If all tests are skipped, the result of this workflow will be `failed` on purpose
-  # If you want to skip tests and have no error, you need to use `testing-ci-not-necessary` as a label on the PR
-  configure-tests:
+  action-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -29,6 +32,10 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
+
+      - name: Get Short GitHub SHA
+        id: short_git_sha
+        run: echo "short_git_sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Import Secrets
         id: secrets
@@ -57,7 +64,7 @@ jobs:
         uses: ./.github/actions/rosa-create-cluster
         with:
           rh-token: ${{ steps.secrets.outputs.RH_OPENSHIFT_TOKEN }}
-          cluster-name: "${{ env.CLUSTER_NAME }}"
+          cluster-name: "tf-rosa-${{ steps.short_git_sha.outputs.short_git_sha }}"
           admin-password: "${{ steps.secrets.outputs.CI_OPENSHIFT_MAIN_PASSWORD }}"
           aws-region: ${{ env.AWS_REGION }}
           namespace:  "myns"
@@ -69,6 +76,6 @@ jobs:
         uses: ./.github/actions/rosa-delete-cluster
         with:
           rh-token: ${{ steps.secrets.outputs.RH_OPENSHIFT_TOKEN }}
-          cluster-name: "${{ env.CLUSTER_NAME }}"
+          cluster-name: "tf-rosa-${{ steps.short_git_sha.outputs.short_git_sha }}"
           aws-region: ${{ env.AWS_REGION }}
           s3-backend-bucket: ${{ env.TF_S3_BUCKET }}

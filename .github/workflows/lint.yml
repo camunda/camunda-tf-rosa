@@ -6,8 +6,6 @@ on:
   push:
   workflow_dispatch:
 
-# TODO: copy lint logic of eks repo
-
 jobs:
   lint:
     name: pre-commit
