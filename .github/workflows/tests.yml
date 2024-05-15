@@ -86,6 +86,7 @@ jobs:
         with:
           rh-token: ${{ steps.secrets.outputs.RH_OPENSHIFT_TOKEN }}
           cluster-name: "${{ steps.commit_info.outputs.cluster_name }}"
+          admin-username: "cluster-admin"
           admin-password: "${{ steps.secrets.outputs.CI_OPENSHIFT_MAIN_PASSWORD }}"
           aws-region: ${{ env.AWS_REGION }}
           namespace:  "myns"
