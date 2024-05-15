@@ -34,11 +34,24 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
-      - name: Get Short GitHub SHA
-        id: short_git_sha
-        # run: echo "short_git_sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
-        # TODO: revert
-        run: echo "short_git_sha=36224f3" >> "$GITHUB_OUTPUT"
+      - name: Get OCP Cluster Name and Delete Flag
+        id: commit_info
+        run: |
+            COMMIT_MSG=$(git log -1 --pretty=%B)
+            if [[ "$COMMIT_MSG" =~ ocp_cluster_name=([^\s]+) ]]; then
+                CLUSTER_NAME=${BASH_REMATCH[1]}
+            else
+                CLUSTER_NAME=$(git rev-parse --short HEAD)
+            fi
+
+            if [[ "$COMMIT_MSG" =~ delete_ocp_cluster=false ]]; then
+                DELETE_CLUSTER="false"
+            else
+                DELETE_CLUSTER="true"
+            fi
+
+            echo "cluster_name=$CLUSTER_NAME" >> "$GITHUB_OUTPUT"
+            echo "delete_cluster=$DELETE_CLUSTER" >> "$GITHUB_OUTPUT"
 
       - name: Import Secrets
         id: secrets
@@ -67,7 +80,7 @@ jobs:
         uses: ./.github/actions/rosa-create-cluster
         with:
           rh-token: ${{ steps.secrets.outputs.RH_OPENSHIFT_TOKEN }}
-          cluster-name: "tf-rosa-${{ steps.short_git_sha.outputs.short_git_sha }}"
+          cluster-name: "${{ steps.commit_info.outputs.cluster_name }}"
           admin-password: "${{ steps.secrets.outputs.CI_OPENSHIFT_MAIN_PASSWORD }}"
           aws-region: ${{ env.AWS_REGION }}
           namespace:  "myns"
@@ -75,10 +88,10 @@ jobs:
 
       - name: Delete Cluster
         timeout-minutes: 125
-        if: always()
+        if: always() && steps.commit_info.outputs.delete_cluster == 'true'
         uses: ./.github/actions/rosa-delete-cluster
         with:
           rh-token: ${{ steps.secrets.outputs.RH_OPENSHIFT_TOKEN }}
-          cluster-name: "tf-rosa-${{ steps.short_git_sha.outputs.short_git_sha }}"
+          cluster-name: "${{ steps.ocp_cluster_name.outputs.cluster_name }}"
           aws-region: ${{ env.AWS_REGION }}
           s3-backend-bucket: ${{ env.TF_S3_BUCKET }}
