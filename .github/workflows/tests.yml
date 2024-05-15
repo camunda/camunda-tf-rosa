@@ -14,8 +14,9 @@ on:
         - justfile
 
 # limit to a single execution per actor of this workflow
-concurrency:
-  group: "${{ github.workflow }}-${{ github.actor }}"
+# concurrency:
+#   group: "${{ github.workflow }}-${{ github.actor }}"
+# TODO: re-enable this
 
 env:
   AWS_PROFILE: "infex"
@@ -37,7 +38,7 @@ jobs:
         id: short_git_sha
         # run: echo "short_git_sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
         # TODO: revert
-        run: echo "short_git_sha=36224c2" >> "$GITHUB_OUTPUT"
+        run: echo "short_git_sha=36224f3" >> "$GITHUB_OUTPUT"
 
       - name: Import Secrets
         id: secrets
