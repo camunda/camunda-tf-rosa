@@ -18,6 +18,3 @@ terraform-docs 0.17.0
 tflint 0.50.3
 
 tfsec 1.28.5
-
-# TODO: rosa and oc not supported
-# TODO: add helm

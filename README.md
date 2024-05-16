@@ -6,136 +6,37 @@
 
 This module automates the creation of a ROSA HCP cluster with an opinionated configuration targeting Camunda 8 on AWS using Terraform.
 
+**⚠️ Warning:** This project is not intended for production use but rather for demonstration purposes only. There are no guarantees or warranties provided.
+
 For more detailed usage and configuration options, please refer to the module's inputs and outputs documentation below.
-
-## Documentation
-
-WIP
 
 ## Usage
 
-### Requirements
+## Requirements
 
-* Terraform
-* AWS CLI
-* ROSA CLI
-* OpenShift CLI
+To gather all specifics versions of this project, we use:
+- [asdf](https://asdf-vm.com/) version manager (see [installation](https://asdf-vm.com/guide/getting-started.html)).
+- [just](https://github.com/casey/just) as a command runner
+  - install it using asdf: `asdf plugin add just && asdf install just`
 
-### Terraform
+Then we will install all the tooling listed in the `.tool-versions` of this root project using just:
+```bash
+just install-tooling
 
-To use this module with Terraform, follow these steps:
-
-1. **Create a Terraform configuration file** (e.g., `main.tf`).
-2. **Include the ROSA HCP module** in your configuration file.
-
-Here's an example configuration:
-
-```hcl
-module "rosa_hcp" {
-  source = "github.com/camunda/camunda-tf-rosa.git//modules/rosa-hcp?ref=main"
-
-  cluster_name           = "my-ocp-cluster"
-  htpasswd_password      = "your_password"
-  offline_access_token   = "your_ocm_token" # see below for instructions
-  openshift_version      = "4.15.11"
-  replicas               = "2"
-}
+# list available recipes
+just --list
 ```
 
-3. **Initialize Terraform** by running:
-    ```sh
-    terraform init
-    ```
+* Terraform (installed by asdf)
+* AWS CLI (installed by asdf)
+* ROSA CLI ([installation guide](https://docs.openshift.com/rosa/rosa_install_access_delete_clusters/rosa_getting_started_iam/rosa-installing-rosa.html))
+* OpenShift CLI ([installation guide](https://docs.openshift.com/container-platform/latest/cli_reference/openshift_cli/getting-started-cli.html)) 
 
-4. **Review the execution plan** with:
-    ```sh
-    terraform plan
-    ```
-
-5. **Apply the configuration** to create the resources:
-    ```sh
-    terraform apply
-    ```
-
-### GitHub Actions
-
-You can automate the deployment and deletion of the ROSA HCP cluster using GitHub Actions. Below are examples of GitHub Actions workflows for deploying and deleting the cluster.
-
-#### Deploy ROSA HCP Cluster
-
-Create a file in your repository's `.github/workflows` directory, for example `deploy-rosa-hcp.yml`, with the following content:
-
-```yaml
-name: Deploy ROSA HCP Cluster
-
-on:
-  push:
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Add profile credentials to ~/.aws/credentials
-        run: |
-          aws configure set aws_access_key_id ${{ steps.secrets.outputs.AWS_ACCESS_KEY }} --profile ${{ env.AWS_PROFILE }}
-          aws configure set aws_secret_access_key ${{ steps.secrets.outputs.AWS_SECRET_KEY }} --profile ${{ env.AWS_PROFILE }}
-          aws configure set region ${{ env.AWS_REGION }} --profile ${{ env.AWS_PROFILE }}
-
-      - name: Deploy ROSA HCP Cluster
-        uses: camunda/camunda-tf-rosa/.github/actions/rosa-create-cluster@main
-        id: create_cluster
-        with:
-          rh-token: ${{ secrets.RH_OPENSHIFT_TOKEN }}
-          cluster-name: "my-ocp-cluster"
-          admin-username: "cluster-admin"
-          admin-password: ${{ secrets.CI_OPENSHIFT_MAIN_PASSWORD }}
-          aws-region: "us-west-2"
-          namespace: "myns"
-          s3-backend-bucket: ${{ secrets.TF_S3_BUCKET }}
-
-      - name: Generate kubeconfig
-        shell: bash
-        id: kube_config
-        run: |
-            oc login --username "cluster-admin" --password ${{ secrets.CI_OPENSHIFT_MAIN_PASSWORD }} "${{ steps.create_cluster.outputs.openshift-server-api }}"
-            oc whoami
-            
-            kubectl config rename-context $(oc config current-context) "my-ocp-cluster"
-            kubectl config use "my-ocp-cluster"
-    
-```
-
-#### Delete ROSA HCP Cluster
-
-Create another file in your repository's `.github/workflows` directory, for example `delete-rosa-hcp.yml`, with the following content:
-
-```yaml
-name: Delete ROSA HCP Cluster
-
-on:
-  workflow_dispatch:
-
-jobs:
-  delete:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Delete ROSA HCP Cluster
-        uses: camunda/camunda-tf-rosa/.github/actions/rosa-delete-cluster@main
-        with:
-          rh-token: ${{ secrets.RH_OPENSHIFT_TOKEN }}
-          cluster-name: "my-ocp-cluster"
-          aws-region: "us-west-2"
-          s3-backend-bucket: ${{ secrets.TF_S3_BUCKET }}
-```
-
-TODO: add description of the actions from definition
-
-
-### Getting started : Create a ROSA HCP cluster
+## Getting started : Create a ROSA HCP cluster
 
 Base tutorial https://aws.amazon.com/blogs/containers/build-rosa-clusters-with-terraform/
 
-#### I. Prepare the deployment
+### I. Enable ROSA in AWS Marketplace
 
 1. Login onto AWS
 2. Check if ELB role exists
@@ -170,19 +71,128 @@ rosa create account-roles --mode auto
 
 Please note that **Only a single AWS account that will be used for service billing can be associated with a Red Hat account.**
 
-#### II. Deploy a cluster with terraform
+### II. Create the cluster
 
-```bash
-export ADMIN_PASS="yourPassword!!138"
-export ADMIN_USER="kubeadmin"
-export CLUSTER_NAME="rosatest"
+#### Terraform
 
-terraform init
-terraform plan -out rosa.plan -var "cluster_name=$CLUSTER_NAME" -var "htpasswd_password=$ADMIN_PASS" -var "htpasswd_username=$ADMIN_USER" -var "offline_access_token=$RH_TOKEN"
-terraform apply rosa.plan
+To use this module with Terraform, follow these steps:
+
+1. **Create a Terraform configuration file** (e.g., `main.tf`).
+2. **Include the ROSA HCP module** in your configuration file.
+
+Here's an example configuration:
+
+```hcl
+module "rosa_hcp" {
+  source = "github.com/camunda/camunda-tf-rosa.git//modules/rosa-hcp?ref=main"
+
+  cluster_name           = "my-ocp-cluster"
+  htpasswd_password      = "your_password"
+  offline_access_token   = "your_ocm_token" # see below for instructions
+  openshift_version      = "4.15.11"
+  replicas               = "2"
+}
 ```
 
-#### III. Retrieve cluster informations
+For more details, refer to the [Terraform module ROSA HCP README](https://github.com/camunda/camunda-tf-rosa/blob/main/modules/rosa-hcp/README.md).
+
+
+3. **Initialize Terraform** by running:
+    ```sh
+    terraform init
+    ```
+
+4. **Review the execution plan** with:
+    ```sh
+    terraform plan
+    ```
+
+5. **Apply the configuration** to create the resources:
+    ```sh
+    terraform apply
+    ```
+
+#### GitHub Actions
+
+You can automate the deployment and deletion of the ROSA HCP cluster using GitHub Actions. Below are examples of GitHub Actions workflows for deploying and deleting the cluster.
+
+##### Deploy ROSA HCP Cluster
+
+Create a file in your repository's `.github/workflows` directory, for example `deploy-rosa-hcp.yml`, with the following content:
+
+```yaml
+name: Deploy ROSA HCP Cluster
+
+on:
+  push:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add profile credentials to ~/.aws/credentials
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY }} --profile ${{ env.AWS_PROFILE }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_KEY }} --profile ${{ env.AWS_PROFILE }}
+          aws configure set region ${{ env.AWS_REGION }} --profile ${{ env.AWS_PROFILE }}
+
+      - name: Deploy ROSA HCP Cluster
+        uses: camunda/camunda-tf-rosa/.github/actions/rosa-create-cluster@main
+        id: create_cluster
+        with:
+          rh-token: ${{ secrets.RH_OPENSHIFT_TOKEN }}
+          cluster-name: "my-ocp-cluster"
+          admin-username: "cluster-admin"
+          admin-password: ${{ secrets.CI_OPENSHIFT_MAIN_PASSWORD }}
+          aws-region: "us-west-2"
+          namespace: "myns"
+          s3-backend-bucket: ${{ secrets.TF_S3_BUCKET }}
+
+      - name: Generate kubeconfig
+        uses: nick-fields/retry@v3
+        id: kube_config
+        with:
+          timeout_minutes: 10
+          max_attempts: 40
+          shell: bash
+          retry_wait_seconds: 15
+          command: |
+            oc login --username "cluster-admin" --password ${{ secrets.CI_OPENSHIFT_MAIN_PASSWORD }} "${{ steps.create_cluster.outputs.openshift-server-api }}"
+            oc whoami
+            
+            kubectl config rename-context $(oc config current-context) "my-ocp-cluster"
+            kubectl config use "my-ocp-cluster"
+```
+
+For more details, refer to the [Deploy ROSA HCP Cluster Action README](https://github.com/camunda/camunda-tf-rosa/blob/main/.github/actions/rosa-create-cluster/README.md).
+
+##### Delete ROSA HCP Cluster
+
+Create another file in your repository's `.github/workflows` directory, for example `delete-rosa-hcp.yml`, with the following content:
+
+```yaml
+name: Delete ROSA HCP Cluster
+
+on:
+  workflow_dispatch:
+
+jobs:
+  delete:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete ROSA HCP Cluster
+        uses: camunda/camunda-tf-rosa/.github/actions/rosa-delete-cluster@main
+        with:
+          rh-token: ${{ secrets.RH_OPENSHIFT_TOKEN }}
+          cluster-name: "my-ocp-cluster"
+          aws-region: "us-west-2"
+          s3-backend-bucket: ${{ secrets.TF_S3_BUCKET }}
+```
+
+For more details, refer to the [Delete ROSA HCP Cluster Action README](https://github.com/camunda/camunda-tf-rosa/blob/main/.github/actions/rosa-delete-cluster/README.md).
+
+
+### III. Retrieve cluster informations
 
 1. In the output, you will have the created cluster id:
 ```bash
@@ -206,8 +216,6 @@ kubectl config use "$CLUSTER_NAME"
 # create a new project
 oc new-project "$NAMESPACE"
 ```
-
-TODO: add modules doc
 
 ## Support
 
