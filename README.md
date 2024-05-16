@@ -147,7 +147,6 @@ rosa verify quota --region="$AWS_REGION"
 # this may fail due to org policy
 rosa verify permissions --region="$AWS_REGION"
 
-# TODO: check if this one is required:
 rosa create account-roles --mode auto
 ```
 5. Enable HCP ROSA on [AWS MarkePlace](https://docs.openshift.com/rosa/cloud_experts_tutorials/cloud-experts-rosa-hcp-activation-and-account-linking-tutorial.html)

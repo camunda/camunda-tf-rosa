@@ -36,6 +36,11 @@ runs:
     - name: Install Terraform
       uses: hashicorp/setup-terraform@v3
 
+    - name: Install aws-cli
+      shell: bash
+      run: |
+        python3 -m pip install "awscli==${{ inputs.awscli-version }}"
+
     - name: Set Terraform variables
       shell: bash
       id: set-terraform-variables
@@ -69,10 +74,15 @@ runs:
       working-directory: "${{ inputs.tf-modules-path }}/modules/rosa-hcp/"
       run: |
         terraform plan -destroy -no-color -out rosa-destroy.plan -var "cluster_name=${{ inputs.cluster-name }}" -var "offline_access_token=${{ inputs.rh-token }}" -var "htpasswd_password=dUmmyPassword$123!"
-# TODO: remove s3
+
     - name: Terraform Apply Destroy
       shell: bash
       id: apply-destroy
       working-directory: "${{ inputs.tf-modules-path }}/modules/rosa-hcp/"
       run: |
         terraform apply -destroy -no-color rosa-destroy.plan
+
+    - name: Delete Terraform State
+      shell: bash
+      run: |
+        aws s3 rm s3://${{ steps.set-terraform-variables.outputs.TFSTATE_BUCKET }}/${{ steps.set-terraform-variables.outputs.TFSTATE_KEY }}
