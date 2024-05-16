@@ -14,9 +14,8 @@ on:
         - justfile
 
 # limit to a single execution per actor of this workflow
-# concurrency:
-#   group: "${{ github.workflow }}-${{ github.actor }}"
-# TODO: re-enable this
+concurrency:
+  group: "${{ github.workflow }}-${{ github.actor }}"
 
 env:
   AWS_PROFILE: "infex"
