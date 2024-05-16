@@ -31,12 +31,12 @@ inputs:
   awscli-version:
     description: 'Version of the aws cli to use'
     required: true
-  # TODO renovate latest version
+    # renovate: datasource=github-releases depName=aws/aws-cli
     default: "1.32.105"
   openshift-version:
     description: 'Version of the OpenShift to install'
     required: true
-  # TODO renovate latest version
+    # TODO renovate latest version but we need to extract versions from https://mirror.openshift.com/pub/openshift-v4/multi/clients/ocp/
     default: "4.15.11"
   replicas:
     description: 'Number of replicas for the ROSA cluster'

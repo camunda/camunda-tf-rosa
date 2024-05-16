@@ -20,7 +20,7 @@ inputs:
   awscli-version:
     description: 'Version of the aws cli to use'
     required: true
-  # TODO renovate latest version
+    # renovate: datasource=github-releases depName=aws/aws-cli
     default: "1.32.105"
   tf-modules-revision:
     description: 'Git revision of the tf modules to use'
