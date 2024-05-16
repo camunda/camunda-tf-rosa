@@ -31,10 +31,12 @@ inputs:
   awscli-version:
     description: 'Version of the aws cli to use'
     required: true
-    default: "1.32.105" # TODO: for all versions, update default one with renovate
+  # TODO renovate latest version
+    default: "1.32.105"
   openshift-version:
     description: 'Version of the OpenShift to install'
     required: true
+  # TODO renovate latest version
     default: "4.15.11"
   replicas:
     description: 'Number of replicas for the ROSA cluster'
