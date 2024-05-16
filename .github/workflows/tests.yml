@@ -76,11 +76,6 @@ jobs:
           aws configure set aws_secret_access_key ${{ steps.secrets.outputs.AWS_SECRET_KEY }} --profile ${{ env.AWS_PROFILE }}
           aws configure set region ${{ env.AWS_REGION }} --profile ${{ env.AWS_PROFILE }}
 
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        with:
-         detached: true
-
       - name: Create Cluster
         timeout-minutes: 125
         uses: ./.github/actions/rosa-create-cluster
