@@ -1,9 +1,8 @@
 name: Deploy ROSA HCP Cluster
 
 description: |
-  This GitHub Action automates the deployment of a ROSA (Red Hat OpenShift Service on AWS) cluster using Terraform with a dedicated namespace.
+  This GitHub Action automates the deployment of a ROSA (Red Hat OpenShift Service on AWS) cluster using Terraform.
   This action will also install oc, awscli, rosa cli.
-  This action also set the current kube context on the created namespace.
 
 inputs:
   rh-token:
@@ -36,7 +35,7 @@ inputs:
   openshift-version:
     description: 'Version of the OpenShift to install'
     required: true
-    default: "4.15.11"
+    default: "4.15.12"
   replicas:
     description: 'Number of replicas for the ROSA cluster'
     required: true
@@ -56,7 +55,7 @@ inputs:
 outputs:
   openshift-server-api:
     description: 'The server API URL of the deployed ROSA cluster'
-    value: ${{ steps.kube_config.outputs.cluster_api }}
+    value: ${{ steps.cluster_info.outputs.cluster_api }}
 
   openshift-cluster-id:
     description: 'The ID of the deployed ROSA cluster'

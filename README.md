@@ -83,13 +83,26 @@ jobs:
 
       - name: Deploy ROSA HCP Cluster
         uses: camunda/camunda-tf-rosa/.github/actions/rosa-create-cluster@main
+        id: create_cluster
         with:
           rh-token: ${{ secrets.RH_OPENSHIFT_TOKEN }}
           cluster-name: "my-ocp-cluster"
+          admin-username: "cluster-admin"
           admin-password: ${{ secrets.CI_OPENSHIFT_MAIN_PASSWORD }}
           aws-region: "us-west-2"
           namespace: "myns"
           s3-backend-bucket: ${{ secrets.TF_S3_BUCKET }}
+
+      - name: Generate kubeconfig
+        shell: bash
+        id: kube_config
+        run: |
+            oc login --username "cluster-admin" --password ${{ secrets.CI_OPENSHIFT_MAIN_PASSWORD }} "${{ steps.create_cluster.outputs.openshift-server-api }}"
+            oc whoami
+            
+            kubectl config rename-context $(oc config current-context) "my-ocp-cluster"
+            kubectl config use "my-ocp-cluster"
+    
 ```
 
 #### Delete ROSA HCP Cluster

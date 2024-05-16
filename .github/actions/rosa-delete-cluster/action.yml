@@ -2,7 +2,7 @@ name: Delete ROSA HCP Cluster
 
 description: |
   This GitHub Action automates the deletion of a ROSA (Red Hat OpenShift Service on AWS) cluster using Terraform.
-  This action will also uninstall oc, awscli, rosa cli.
+  This action will also install awscli.
 
 inputs:
   rh-token:
