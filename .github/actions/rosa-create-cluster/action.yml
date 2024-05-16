@@ -168,6 +168,6 @@ runs:
       id: cluster_info
       run: |
         rosa describe cluster --output=json -c "${{ steps.apply.outputs.cluster_id }}"
-        export server_api=$(rosa describe cluster --output=json -c "${{ steps.apply.outputs.cluster_id }}" | jq -r '.api.url')
-        echo "server_api=$server_api"
-        echo "server_api=$server_api" >> "$GITHUB_OUTPUT"
+        export cluster_api=$(rosa describe cluster --output=json -c "${{ steps.apply.outputs.cluster_id }}" | jq -r '.api.url')
+        echo "cluster_api=$cluster_api"
+        echo "cluster_api=$cluster_api" >> "$GITHUB_OUTPUT"
