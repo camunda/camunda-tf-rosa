@@ -87,7 +87,9 @@ jobs:
           rh-token: ${{ steps.secrets.outputs.RH_OPENSHIFT_TOKEN }}
           cluster-name: "${{ steps.commit_info.outputs.cluster_name }}"
           admin-username: "cluster-admin"
-          admin-password: "${{ steps.secrets.outputs.CI_OPENSHIFT_MAIN_PASSWORD }}"
+          #admin-password: "${{ steps.secrets.outputs.CI_OPENSHIFT_MAIN_PASSWORD }}"
+          # TODO: change this
+          admin-password: "myUnsecure1234567!pass"
           aws-region: ${{ env.AWS_REGION }}
           namespace:  "myns"
           s3-backend-bucket: ${{ env.TF_S3_BUCKET }}

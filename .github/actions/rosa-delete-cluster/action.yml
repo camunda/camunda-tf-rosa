@@ -53,6 +53,7 @@ runs:
         repository: "camunda/camunda-tf-rosa"
         ref: ${{ inputs.tf-modules-revision }}
         path: ${{ inputs.tf-modules-path }}
+        fetch-depth: 0
 
     - name: Terraform Init
       shell: bash
@@ -68,7 +69,7 @@ runs:
       working-directory: "${{ inputs.tf-modules-path }}/modules/rosa-hcp/"
       run: |
         terraform plan -destroy -no-color -out rosa-destroy.plan -var "cluster_name=${{ inputs.cluster-name }}" -var "offline_access_token=${{ inputs.rh-token }}" -var "htpasswd_password=dUmmyPassword$123!"
-
+# TODO: remove s3
     - name: Terraform Apply Destroy
       shell: bash
       id: apply-destroy

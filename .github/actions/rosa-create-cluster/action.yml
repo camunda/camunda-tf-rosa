@@ -137,6 +137,7 @@ runs:
         repository: "camunda/camunda-tf-rosa"
         ref: ${{ inputs.tf-modules-revision }}
         path: ${{ inputs.tf-modules-path }}
+        fetch-depth: 0
 
     - name: Terraform Init
       shell: bash
