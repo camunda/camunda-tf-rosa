@@ -36,7 +36,7 @@ To start developing or testing the Rosa module, follow these steps:
 
 The tests in the CI can be triggered automatically by modifying Terraform or test files. It will be labeled either `test` or `terraform` automatically by the labeler.
 
-You can choose to overwrite the name of the cluster by including `ocp_cluster_name=leogit8` in the commit description. 
+You can choose to overwrite the name of the cluster by including `ocp_cluster_name=leogit8` in the commit description.
 Additionally, you can disable the deletion of the cluster by adding `delete_ocp_cluster=false` in the commit description.
 
 ## Releasing a New Version

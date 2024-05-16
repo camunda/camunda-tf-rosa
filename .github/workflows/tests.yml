@@ -44,7 +44,7 @@ jobs:
             else
                 cluster_name=$(git rev-parse --short HEAD)
             fi
-            
+
             if echo "$commit_message" | grep -q 'delete_ocp_cluster=false'; then
                 delete_cluster="false"
             else
@@ -75,7 +75,7 @@ jobs:
           aws configure set aws_access_key_id ${{ steps.secrets.outputs.AWS_ACCESS_KEY }} --profile ${{ env.AWS_PROFILE }}
           aws configure set aws_secret_access_key ${{ steps.secrets.outputs.AWS_SECRET_KEY }} --profile ${{ env.AWS_PROFILE }}
           aws configure set region ${{ env.AWS_REGION }} --profile ${{ env.AWS_PROFILE }}
-      
+
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         with:
@@ -105,10 +105,10 @@ jobs:
           command: |
             oc login --username ${{ env.OCP_ADMIN_USERNAME }} --password ${{ steps.secrets.outputs.CI_OPENSHIFT_MAIN_PASSWORD }} "${{ steps.create_cluster.outputs.openshift-server-api }}"
             oc whoami
-            
+
             kubectl config rename-context $(oc config current-context) "${{ steps.commit_info.outputs.cluster_name }}"
             kubectl config use "${{ steps.commit_info.outputs.cluster_name }}"
-    
+
       - name: Create namespace if not exists
         shell: bash
         run: |
@@ -116,7 +116,7 @@ jobs:
                 oc new-project "${{ env.OCP_NAMESPACE }}"
             else
                 echo "Namespace '${{ env.OCP_NAMESPACE }}' already exists"
-            fi    
+            fi
 
       - name: Delete Cluster
         timeout-minutes: 125

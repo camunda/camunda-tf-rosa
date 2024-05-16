@@ -71,7 +71,7 @@ jobs:
           command: |
             oc login --username "cluster-admin" --password ${{ secrets.CI_OPENSHIFT_MAIN_PASSWORD }} "${{ steps.create_cluster.outputs.openshift-server-api }}"
             oc whoami
-            
+
             kubectl config rename-context $(oc config current-context) "my-ocp-cluster"
             kubectl config use "my-ocp-cluster"
 ```

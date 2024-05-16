@@ -30,7 +30,7 @@ just --list
 * Terraform (installed by asdf)
 * AWS CLI (installed by asdf)
 * ROSA CLI ([installation guide](https://docs.openshift.com/rosa/rosa_install_access_delete_clusters/rosa_getting_started_iam/rosa-installing-rosa.html))
-* OpenShift CLI ([installation guide](https://docs.openshift.com/container-platform/latest/cli_reference/openshift_cli/getting-started-cli.html)) 
+* OpenShift CLI ([installation guide](https://docs.openshift.com/container-platform/latest/cli_reference/openshift_cli/getting-started-cli.html))
 
 ## Getting started : Create a ROSA HCP cluster
 
@@ -159,7 +159,7 @@ jobs:
           command: |
             oc login --username "cluster-admin" --password ${{ secrets.CI_OPENSHIFT_MAIN_PASSWORD }} "${{ steps.create_cluster.outputs.openshift-server-api }}"
             oc whoami
-            
+
             kubectl config rename-context $(oc config current-context) "my-ocp-cluster"
             kubectl config use "my-ocp-cluster"
 ```
