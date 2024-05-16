@@ -96,9 +96,14 @@ jobs:
           s3-backend-bucket: ${{ env.TF_S3_BUCKET }}
 
       - name: Generate kubeconfig
-        shell: bash
+        uses: nick-fields/retry@v3
         id: kube_config
-        run: |
+        with:
+          timeout_minutes: 10
+          max_attempts: 40
+          shell: bash
+          retry_wait_seconds: 15
+          command: |
             oc login --username ${{ env.OCP_ADMIN_USERNAME }} --password ${{ steps.secrets.outputs.CI_OPENSHIFT_MAIN_PASSWORD }} "${{ steps.create_cluster.outputs.openshift-server-api }}"
             oc whoami
             
