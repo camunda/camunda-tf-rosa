@@ -8,7 +8,7 @@ variable "cluster_name" {
 variable "openshift_version" {
   type        = string
   description = "The version of ROSA to be deployed"
-  # TODO renovate latest version but we need to extract versions from https://mirror.openshift.com/pub/openshift-v4/multi/clients/ocp/
+  # renovate: datasource=endoflife-date depName=red-hat-openshift versioning=semver
   default = "4.14.21"
   validation {
     condition     = can(regex("^[0-9]*[0-9]+.[0-9]*[0-9]+.[0-9]*[0-9]+$", var.openshift_version))

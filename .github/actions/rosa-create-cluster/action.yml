@@ -36,7 +36,7 @@ inputs:
   openshift-version:
     description: 'Version of the OpenShift to install'
     required: true
-    # TODO renovate latest version but we need to extract versions from https://mirror.openshift.com/pub/openshift-v4/multi/clients/ocp/
+    # renovate: datasource=endoflife-date depName=red-hat-openshift versioning=semver
     default: "4.15.11"
   replicas:
     description: 'Number of replicas for the ROSA cluster'
