@@ -172,22 +172,3 @@ runs:
         export server_api=$(rosa describe cluster --output=json -c "${{ steps.apply.outputs.cluster_id }}" | jq -r '.api.url')
         echo "server_api=$server_api"
         echo "server_api=$server_api" >> "$GITHUB_OUTPUT"
-
-    - name: Generate kubeconfig
-      shell: bash
-      id: kube_config
-      run: |
-        oc login --username ${{ inputs.admin-username }} --password ${{ inputs.admin-password }} "${{ steps.cluster_info.outputs.server_api }}"
-        oc whoami
-        
-        kubectl config rename-context $(oc config current-context) "${{ inputs.cluster-name }}"
-        kubectl config use "${{ inputs.cluster-name }}"
-
-    - name: Create namespace if not exists
-      shell: bash
-      run: |
-        if ! oc get namespace "${{ inputs.namespace }}"; then
-          oc new-project "${{ inputs.namespace }}"
-        else
-          echo "Namespace '${{ inputs.namespace }}' already exists"
-        fi

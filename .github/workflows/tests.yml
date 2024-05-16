@@ -22,6 +22,8 @@ env:
   AWS_PROFILE: "infex"
   AWS_REGION: "eu-west-2"
   TF_S3_BUCKET: "camunda-tf-rosa"
+  OCP_ADMIN_USERNAME: "cluster-admin"
+  OCP_NAMESPACE: "myns"
 
 jobs:
 
@@ -83,14 +85,34 @@ jobs:
       - name: Create Cluster
         timeout-minutes: 125
         uses: ./.github/actions/rosa-create-cluster
+        id: create_cluster
         with:
           rh-token: ${{ steps.secrets.outputs.RH_OPENSHIFT_TOKEN }}
-          cluster-name: "${{ steps.commit_info.outputs.cluster_name }}"
-          admin-username: "cluster-admin"
-          admin-password: "${{ steps.secrets.outputs.CI_OPENSHIFT_MAIN_PASSWORD }}"
+          cluster-name: ${{ steps.commit_info.outputs.cluster_name }}
+          admin-username: ${{ env.OCP_ADMIN_USERNAME }}
+          admin-password: ${{ steps.secrets.outputs.CI_OPENSHIFT_MAIN_PASSWORD }}
           aws-region: ${{ env.AWS_REGION }}
-          namespace:  "myns"
+          namespace:  ${{ env.OCP_NAMESPACE }}
           s3-backend-bucket: ${{ env.TF_S3_BUCKET }}
+
+      - name: Generate kubeconfig
+        shell: bash
+        id: kube_config
+        run: |
+            oc login --username ${{ env.OCP_ADMIN_USERNAME }} --password ${{ steps.secrets.outputs.CI_OPENSHIFT_MAIN_PASSWORD }} "${{ steps.create_cluster.outputs.openshift-server-api }}"
+            oc whoami
+            
+            kubectl config rename-context $(oc config current-context) "${{ steps.commit_info.outputs.cluster_name }}"
+            kubectl config use "${{ steps.commit_info.outputs.cluster_name }}"
+    
+      - name: Create namespace if not exists
+        shell: bash
+        run: |
+            if ! oc get namespace "${{ env.OCP_NAMESPACE }}"; then
+                oc new-project "${{ env.OCP_NAMESPACE }}"
+            else
+                echo "Namespace '${{ env.OCP_NAMESPACE }}' already exists"
+            fi    
 
       - name: Delete Cluster
         timeout-minutes: 125
