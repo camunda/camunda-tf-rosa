@@ -86,23 +86,7 @@ jobs:
           admin-username: ${{ env.OCP_ADMIN_USERNAME }}
           admin-password: ${{ steps.secrets.outputs.CI_OPENSHIFT_MAIN_PASSWORD }}
           aws-region: ${{ env.AWS_REGION }}
-          namespace: ${{ env.OCP_NAMESPACE }}
           s3-backend-bucket: ${{ env.TF_S3_BUCKET }}
-
-      - name: Generate kubeconfig
-        uses: nick-fields/retry@7152eba30c6575329ac0576536151aca5a72780e # v3
-        id: kube_config
-        with:
-          timeout_minutes: 10
-          max_attempts: 40
-          shell: bash
-          retry_wait_seconds: 15
-          command: |
-            oc login --username ${{ env.OCP_ADMIN_USERNAME }} --password ${{ steps.secrets.outputs.CI_OPENSHIFT_MAIN_PASSWORD }} "${{ steps.create_cluster.outputs.openshift-server-api }}"
-            oc whoami
-
-            kubectl config rename-context $(oc config current-context) "${{ steps.commit_info.outputs.cluster_name }}"
-            kubectl config use "${{ steps.commit_info.outputs.cluster_name }}"
 
       - name: Create namespace if not exists
         shell: bash

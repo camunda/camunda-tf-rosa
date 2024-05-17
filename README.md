@@ -139,29 +139,21 @@ jobs:
       - name: Deploy ROSA HCP Cluster
         uses: camunda/camunda-tf-rosa/.github/actions/rosa-create-cluster@main
         id: create_cluster
+        timeout-minutes: 125 # cluster creation can take up to 45 minutes
         with:
           rh-token: ${{ secrets.RH_OPENSHIFT_TOKEN }}
           cluster-name: "my-ocp-cluster"
           admin-username: "cluster-admin"
           admin-password: ${{ secrets.CI_OPENSHIFT_MAIN_PASSWORD }}
           aws-region: "us-west-2"
-          namespace: "myns"
           s3-backend-bucket: ${{ secrets.TF_S3_BUCKET }}
 
-      - name: Generate kubeconfig
-        uses: nick-fields/retry@v3
-        id: kube_config
-        with:
-          timeout_minutes: 10
-          max_attempts: 40
-          shell: bash
-          retry_wait_seconds: 15
-          command: |
-            oc login --username "cluster-admin" --password ${{ secrets.CI_OPENSHIFT_MAIN_PASSWORD }} "${{ steps.create_cluster.outputs.openshift-server-api }}"
-            oc whoami
-
-            kubectl config rename-context $(oc config current-context) "my-ocp-cluster"
-            kubectl config use "my-ocp-cluster"
+      - name: Use your created cluster
+        shell: bash
+        run: |
+          oc new-project "myns"
+          oc whoami
+          oc get pods
 ```
 
 For more details, refer to the [Deploy ROSA HCP Cluster Action README](https://github.com/camunda/camunda-tf-rosa/blob/main/.github/actions/rosa-create-cluster/README.md).
@@ -182,6 +174,7 @@ jobs:
     steps:
       - name: Delete ROSA HCP Cluster
         uses: camunda/camunda-tf-rosa/.github/actions/rosa-delete-cluster@main
+        timeout-minutes: 125 # cluster deletion can take some time
         with:
           rh-token: ${{ secrets.RH_OPENSHIFT_TOKEN }}
           cluster-name: "my-ocp-cluster"

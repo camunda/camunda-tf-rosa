@@ -11,7 +11,6 @@ This GitHub Action automates the deployment of a ROSA (Red Hat OpenShift Service
 | `admin-password`    | Admin password for the ROSA cluster                          | true     |                  |
 | `admin-username`    | Admin username for the ROSA cluster                          | true     | `cluster-admin`  |
 | `aws-region`        | AWS region where the ROSA cluster will be deployed           | true     |                  |
-| `namespace`         | Namespace to create in the ROSA cluster                      | true     |                  |
 | `rosa-cli-version`  | Version of the ROSA CLI to use                               | true     | `latest`         |
 | `awscli-version`    | Version of the AWS CLI to use                                | true     | `1.32.105`       |
 | `openshift-version` | Version of the OpenShift to install                          | true     | `4.15.11`        |
@@ -19,6 +18,7 @@ This GitHub Action automates the deployment of a ROSA (Red Hat OpenShift Service
 | `s3-backend-bucket` | Name of the S3 bucket to store Terraform state               | true     |                  |
 | `tf-modules-revision`| Git revision of the Terraform modules to use                | true     | `main`           |
 | `tf-modules-path`   | Path where the Terraform ROSA modules will be cloned         | true     | `./.action-tf-modules/rosa/` |
+| `login`             | Authenticate the current kube context on the created cluster | true     | `true`           |
 
 ## Outputs
 
