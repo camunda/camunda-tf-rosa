@@ -55,7 +55,7 @@ jobs:
           if [[ -n "${{ inputs.cluster_name }}" ]]; then
             cluster_name="${{ inputs.cluster_name }}"
           else
-            cluster_name=$(git rev-parse --short HEAD)
+            cluster_name="cl-$(git rev-parse --short HEAD)"
           fi
 
           echo "cluster_name=$cluster_name" >> "$GITHUB_OUTPUT"
