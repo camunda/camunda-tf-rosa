@@ -2,16 +2,16 @@
 name: Cluster creation and destruction test
 
 on:
-    workflow_dispatch:
-    pull_request:
-        # the paths should be synced with ../labeler.yml
-        paths:
-        - modules/fixtures/**
-        - modules/**.tf
-        - .tool-versions
-        - .github/workflows/tests.yml
-        - .github/actions/**
-        - justfile
+  workflow_dispatch:
+  pull_request:
+    # the paths should be synced with ../labeler.yml
+    paths:
+      - modules/fixtures/**
+      - modules/**.tf
+      - .tool-versions
+      - .github/workflows/tests.yml
+      - .github/actions/**
+      - justfile
 
 # limit to a single execution per actor of this workflow
 concurrency:
@@ -38,21 +38,21 @@ jobs:
       - name: Get OCP Cluster Name and Delete Flag
         id: commit_info
         run: |
-            commit_message=$(git log -1 --pretty=format:"%B")
-            if echo "$commit_message" | grep -qE 'ocp_cluster_name=([^\s]+)'; then
-                cluster_name=$(echo "$commit_message" | grep -oP 'ocp_cluster_name=\K[^\s]+')
-            else
-                cluster_name=$(git rev-parse --short HEAD)
-            fi
+          commit_message=$(git log -1 --pretty=format:"%B")
+          if echo "$commit_message" | grep -qE 'ocp_cluster_name=([^\s]+)'; then
+              cluster_name=$(echo "$commit_message" | grep -oP 'ocp_cluster_name=\K[^\s]+')
+          else
+              cluster_name=$(git rev-parse --short HEAD)
+          fi
 
-            if echo "$commit_message" | grep -q 'delete_ocp_cluster=false'; then
-                delete_cluster="false"
-            else
-                delete_cluster="true"
-            fi
+          if echo "$commit_message" | grep -q 'delete_ocp_cluster=false'; then
+              delete_cluster="false"
+          else
+              delete_cluster="true"
+          fi
 
-            echo "cluster_name=$cluster_name" >> "$GITHUB_OUTPUT"
-            echo "delete_cluster=$delete_cluster" >> "$GITHUB_OUTPUT"
+          echo "cluster_name=$cluster_name" >> "$GITHUB_OUTPUT"
+          echo "delete_cluster=$delete_cluster" >> "$GITHUB_OUTPUT"
 
       - name: Import Secrets
         id: secrets
@@ -86,11 +86,11 @@ jobs:
           admin-username: ${{ env.OCP_ADMIN_USERNAME }}
           admin-password: ${{ steps.secrets.outputs.CI_OPENSHIFT_MAIN_PASSWORD }}
           aws-region: ${{ env.AWS_REGION }}
-          namespace:  ${{ env.OCP_NAMESPACE }}
+          namespace: ${{ env.OCP_NAMESPACE }}
           s3-backend-bucket: ${{ env.TF_S3_BUCKET }}
 
       - name: Generate kubeconfig
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@7152eba30c6575329ac0576536151aca5a72780e # v3
         id: kube_config
         with:
           timeout_minutes: 10
@@ -107,11 +107,11 @@ jobs:
       - name: Create namespace if not exists
         shell: bash
         run: |
-            if ! oc get namespace "${{ env.OCP_NAMESPACE }}"; then
-                oc new-project "${{ env.OCP_NAMESPACE }}"
-            else
-                echo "Namespace '${{ env.OCP_NAMESPACE }}' already exists"
-            fi
+          if ! oc get namespace "${{ env.OCP_NAMESPACE }}"; then
+              oc new-project "${{ env.OCP_NAMESPACE }}"
+          else
+              echo "Namespace '${{ env.OCP_NAMESPACE }}' already exists"
+          fi
 
       - name: Delete Cluster
         timeout-minutes: 125

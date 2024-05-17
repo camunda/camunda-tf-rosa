@@ -80,10 +80,10 @@ runs:
         rosa version
 
     - name: Install Terraform
-      uses: hashicorp/setup-terraform@v3
+      uses: hashicorp/setup-terraform@651471c36a6092792c552e8b1bef71e592b462d8 # v3
 
     - name: Install CLI tools from OpenShift Mirror
-      uses: redhat-actions/openshift-tools-installer@v1
+      uses: redhat-actions/openshift-tools-installer@2de9a80cf012ad0601021515481d433b91ef8fd5 # v1
       with:
         oc: "${{ inputs.openshift-version }}"
 
@@ -133,7 +133,7 @@ runs:
         echo "terraform-state-url=${terraform_state_url}" >> "$GITHUB_OUTPUT"
 
     - name: Checkout Repository rosa modules
-      uses: actions/checkout@v4
+      uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4
       with:
         repository: "camunda/camunda-tf-rosa"
         ref: ${{ inputs.tf-modules-revision }}
