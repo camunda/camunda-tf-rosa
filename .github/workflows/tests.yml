@@ -24,7 +24,7 @@ on:
       - modules/**.tf
       - .tool-versions
       - .github/workflows/tests.yml
-      - .github/actions/**
+      - .github/actions/**.yml
       - justfile
 
 # limit to a single execution per actor of this workflow
