@@ -83,6 +83,12 @@ runs:
       run: |
         terraform apply -destroy -no-color rosa-destroy.plan
 
+    - name: Clean up cloned modules
+      shell: bash
+      if: always()
+      run: |
+        rm -rf "${{ inputs.tf-modules-path }}"
+
     - name: Delete Terraform State
       shell: bash
       run: |
