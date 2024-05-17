@@ -105,7 +105,7 @@ jobs:
 
       - name: Delete Cluster
         timeout-minutes: 125
-        if: always() && !(inputs.delete_cluster == false)
+        if: always() && !(github.event_name == 'workflow_dispatch' && github.event.inputs.delete_cluster == 'false')
         uses: ./.github/actions/rosa-delete-cluster
         with:
           rh-token: ${{ steps.secrets.outputs.RH_OPENSHIFT_TOKEN }}
