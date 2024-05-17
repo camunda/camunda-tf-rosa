@@ -10,9 +10,13 @@ This GitHub Action automates the deletion of a ROSA (Red Hat OpenShift Service o
 | `cluster-name`       | Name of the ROSA cluster to delete                       | true     |                                |
 | `aws-region`         | AWS region where the ROSA cluster is deployed            | true     |                                |
 | `s3-backend-bucket`  | Name of the S3 bucket where the Terraform state is stored| true     |                                |
-| `awscli-version`     | Version of the aws cli to use                            | true     | `1.32.105`                     |
-| `tf-modules-revision`| Git revision of the tf modules to use                    | true     | `main`                         |
-| `tf-modules-path`    | Path where the tf rosa modules will be cloned            | true     | `./.action-tf-modules/rosa/`   |
+| `awscli-version`     | Version of the aws cli to use                            | false    | `1.32.105`                     |
+| `tf-modules-revision`| Git revision of the tf modules to use                    | false    | `main`                         |
+| `tf-modules-path`    | Path where the tf rosa modules will be cloned            | false    | `./.action-tf-modules/rosa/`   |
+| `tf-cli-config-credentials-hostname` | The hostname of a HCP Terraform/Terraform Enterprise instance to place within the credentials block of the Terraform CLI configuration file. Defaults to `app.terraform.io`. | false | `app.terraform.io` |
+| `tf-cli-config-credentials-token` | The API token for a HCP Terraform/Terraform Enterprise instance to place within the credentials block of the Terraform CLI configuration file. | false | |
+| `tf-terraform-version`     | The version of Terraform CLI to install. Defaults to `latest`.                 | false    | `latest`         |
+| `tf-terraform-wrapper`     | Whether or not to install a wrapper to wrap subsequent calls of the `terraform` binary and expose its STDOUT, STDERR, and exit code as outputs named `stdout`, `stderr`, and `exitcode` respectively. Defaults to `true`. | false | `true` |
 
 ## Usage
 
@@ -22,7 +26,7 @@ Create a file in your repository's `.github/workflows` directory, for example `d
 name: Delete ROSA HCP Cluster
 
 on:
-  workflow_dispatch:
+  pull_request:
 
 jobs:
   delete:

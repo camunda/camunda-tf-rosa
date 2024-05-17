@@ -9,16 +9,20 @@ This GitHub Action automates the deployment of a ROSA (Red Hat OpenShift Service
 | `rh-token`          | Red Hat Hybrid Cloud Console Token                           | true     |                  |
 | `cluster-name`      | Name of the ROSA cluster to deploy                           | true     |                  |
 | `admin-password`    | Admin password for the ROSA cluster                          | true     |                  |
-| `admin-username`    | Admin username for the ROSA cluster                          | true     | `cluster-admin`  |
+| `admin-username`    | Admin username for the ROSA cluster                          | false    | `cluster-admin`  |
 | `aws-region`        | AWS region where the ROSA cluster will be deployed           | true     |                  |
-| `rosa-cli-version`  | Version of the ROSA CLI to use                               | true     | `latest`         |
-| `awscli-version`    | Version of the AWS CLI to use                                | true     | `1.32.105`       |
-| `openshift-version` | Version of the OpenShift to install                          | true     | `4.15.11`        |
-| `replicas`          | Number of replicas for the ROSA cluster                      | true     | `2`              |
+| `rosa-cli-version`  | Version of the ROSA CLI to use                               | false    | `latest`         |
+| `awscli-version`    | Version of the AWS CLI to use                                | false    | `1.32.105`       |
+| `openshift-version` | Version of the OpenShift to install                          | false    | `4.15.11`        |
+| `replicas`          | Number of replicas for the ROSA cluster                      | false    | `2`              |
 | `s3-backend-bucket` | Name of the S3 bucket to store Terraform state               | true     |                  |
-| `tf-modules-revision`| Git revision of the Terraform modules to use                | true     | `main`           |
-| `tf-modules-path`   | Path where the Terraform ROSA modules will be cloned         | true     | `./.action-tf-modules/rosa/` |
-| `login`             | Authenticate the current kube context on the created cluster | true     | `true`           |
+| `tf-modules-revision`| Git revision of the Terraform modules to use                | false    | `main`           |
+| `tf-modules-path`   | Path where the Terraform ROSA modules will be cloned         | false    | `./.action-tf-modules/rosa/` |
+| `login`             | Authenticate the current kube context on the created cluster | false    | `true`           |
+| `tf-cli-config-credentials-hostname` | The hostname of a HCP Terraform/Terraform Enterprise instance to place within the credentials block of the Terraform CLI configuration file. Defaults to `app.terraform.io`. | false | `app.terraform.io` |
+| `tf-cli-config-credentials-token` | The API token for a HCP Terraform/Terraform Enterprise instance to place within the credentials block of the Terraform CLI configuration file. | false | |
+| `tf-terraform-version`     | The version of Terraform CLI to install. Defaults to `latest`.                 | false    | `latest`         |
+| `tf-terraform-wrapper`     | Whether or not to install a wrapper to wrap subsequent calls of the `terraform` binary and expose its STDOUT, STDERR, and exit code as outputs named `stdout`, `stderr`, and `exitcode` respectively. Defaults to `true`. | false | `true` |
 
 ## Outputs
 
@@ -36,7 +40,7 @@ Create a file in your repository's `.github/workflows` directory, for example `d
 name: Deploy ROSA HCP Cluster
 
 on:
-  push:
+  pull_request:
 
 jobs:
   deploy:

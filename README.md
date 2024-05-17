@@ -10,8 +10,6 @@ This module automates the creation of a ROSA HCP cluster with an opinionated con
 
 For more detailed usage and configuration options, please refer to the module's inputs and outputs documentation below.
 
-## Usage
-
 ## Requirements
 
 To gather all specifics versions of this project, we use:
@@ -64,10 +62,10 @@ rosa verify permissions --region="$AWS_REGION"
 rosa create account-roles --mode auto
 ```
 5. Enable HCP ROSA on [AWS MarkePlace](https://docs.openshift.com/rosa/cloud_experts_tutorials/cloud-experts-rosa-hcp-activation-and-account-linking-tutorial.html)
-    5.1 Navigate to the ROSA console : https://console.aws.amazon.com/rosa
-    5.2 Choose Get started.
-    5.3 On the Verify ROSA prerequisites page, select I agree to share my contact information with Red Hat.
-    5.4 Choose Enable ROSA
+    * Navigate to the ROSA console : https://console.aws.amazon.com/rosa
+    * Choose Get started.
+    * On the Verify ROSA prerequisites page, select I agree to share my contact information with Red Hat.
+    * Choose Enable ROSA
 
 Please note that **Only a single AWS account that will be used for service billing can be associated with a Red Hat account.**
 
@@ -124,7 +122,7 @@ Create a file in your repository's `.github/workflows` directory, for example `d
 name: Deploy ROSA HCP Cluster
 
 on:
-  push:
+  pull_request:
 
 jobs:
   deploy:

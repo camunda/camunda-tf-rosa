@@ -21,7 +21,7 @@ inputs:
     description: 'Version of the aws cli to use'
     required: true
     # renovate: datasource=github-releases depName=aws/aws-cli
-    default: "1.32.105"
+    default: "2.15.52"
   tf-modules-revision:
     description: 'Git revision of the tf modules to use'
     default: 'main'
@@ -31,16 +31,42 @@ inputs:
     default: './.action-tf-modules/rosa/'
     required: true
 
+  # inherited from https://github.com/hashicorp/setup-terraform/blob/main/action.yml
+  tf-cli-config-credentials-hostname:
+    description: 'The hostname of a HCP Terraform/Terraform Enterprise instance to place within the credentials block of the Terraform CLI configuration file. Defaults to `app.terraform.io`.'
+    default: 'app.terraform.io'
+    required: false
+  tf-cli-config-credentials-token:
+    description: 'The API token for a HCP Terraform/Terraform Enterprise instance to place within the credentials block of the Terraform CLI configuration file.'
+    required: false
+  tf-terraform-version:
+    description: 'The version of Terraform CLI to install. Instead of full version string you can also specify constraint string starting with "<" (for example `<1.13.0`) to install the latest version satisfying the constraint. A value of `latest` will install the latest version of Terraform CLI. Defaults to `latest`.'
+    default: 'latest'
+    required: false
+  tf-terraform-wrapper:
+    description: 'Whether or not to install a wrapper to wrap subsequent calls of the `terraform` binary and expose its STDOUT, STDERR, and exit code as outputs named `stdout`, `stderr`, and `exitcode` respectively. Defaults to `true`.'
+    default: 'true'
+    required: false
+
 runs:
   using: 'composite'
   steps:
     - name: Install Terraform
       uses: hashicorp/setup-terraform@651471c36a6092792c552e8b1bef71e592b462d8 # v3
+      with:
+        cli_config_credentials_hostname: ${{ inputs.tf-cli-config-credentials-hostname }}
+        cli_config_credentials_token: ${{ inputs.tf-cli-config-credentials-token }}
+        terraform_version: ${{ inputs.tf-terraform-version }}
+        terraform_wrapper: ${{ inputs.tf-terraform-wrapper }}
 
-    - name: Install aws-cli
+    - name: Install aws-cli v2
       shell: bash
       run: |
-        python3 -m pip install "awscli==${{ inputs.awscli-version }}"
+        cd /tmp/awscli
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${{ inputs.awscli-version }}.zip" -o "awscliv2.zip"
+        unzip awscliv2.zip
+        sudo ./aws/install
+        cd - && rm -Rf /tmp/awscli
 
     - name: Set Terraform variables
       shell: bash
