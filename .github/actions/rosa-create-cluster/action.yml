@@ -128,6 +128,7 @@ runs:
     - name: Install aws-cli v2
       shell: bash
       run: |
+        rm -rf /usr/local/aws-cli
         mkdir -p /tmp/awscli && cd /tmp/awscli
         curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${{ inputs.awscli-version }}.zip" -o "awscliv2.zip"
         unzip awscliv2.zip
