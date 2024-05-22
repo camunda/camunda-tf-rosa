@@ -20,11 +20,11 @@ on:
   pull_request:
     # the paths should be synced with ../labeler.yml
     paths:
-      - modules/fixtures/**
+      - modules/fixtures/**/*.tf
       - modules/**.tf
       - .tool-versions
       - .github/workflows/tests.yml
-      - .github/actions/**.yml
+      - .github/actions/**/*.yml
       - justfile
 
 # limit to a single execution per actor of this workflow
