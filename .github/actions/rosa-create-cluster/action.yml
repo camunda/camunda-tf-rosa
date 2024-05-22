@@ -121,7 +121,7 @@ runs:
     - name: Verify and enable HCP ROSA on AWS Marketplace
       shell: bash
       run: |
-        rosa verify quota
+        rosa verify quota --region="${{ inputs.aws-region }}"
         rosa verify permissions --region="${{ inputs.aws-region }}"
         rosa create account-roles --mode auto --region="${{ inputs.aws-region }}"
 
