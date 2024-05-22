@@ -217,6 +217,8 @@ runs:
         retry_wait_seconds: 15
         command: |
           oc login --username "${{ inputs.admin-username }}" --password "${{ inputs.admin-password }}" "${{ steps.cluster_info.outputs.cluster_api }}"
+          rosa grant user cluster-admin --cluster="${{ inputs.cluster-name }}" --user="${{ inputs.admin-username }}"
+
           oc whoami
 
           kubectl config rename-context $(oc config current-context) "${{ inputs.cluster-name }}"
