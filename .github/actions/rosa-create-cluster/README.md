@@ -12,8 +12,8 @@ This GitHub Action automates the deployment of a ROSA (Red Hat OpenShift Service
 | `admin-username`    | Admin username for the ROSA cluster                          | false    | `cluster-admin`  |
 | `aws-region`        | AWS region where the ROSA cluster will be deployed           | true     |                  |
 | `rosa-cli-version`  | Version of the ROSA CLI to use                               | false    | `latest`         |
-| `awscli-version`    | Version of the AWS CLI to use                                | false    | `1.32.105`       |
-| `openshift-version` | Version of the OpenShift to install                          | false    | `4.15.11`        |
+| `awscli-version`    | Version of the AWS CLI to use                                | false    | __see `action.yml`__       |
+| `openshift-version` | Version of the OpenShift to install                          | false    | __see `action.yml`__        |
 | `replicas`          | Number of replicas for the ROSA cluster                      | false    | `2`              |
 | `s3-backend-bucket` | Name of the S3 bucket to store Terraform state               | true     |                  |
 | `tf-modules-revision`| Git revision of the Terraform modules to use                | false    | `main`           |
@@ -33,6 +33,8 @@ This GitHub Action automates the deployment of a ROSA (Red Hat OpenShift Service
 | `terraform-state-url`    | URL of the Terraform state file in the S3 bucket            |
 
 ## Usage
+
+This action is idempotent and can be re-run without affecting the existing cluster, following the principles of Terraform.
 
 Create a file in your repository's `.github/workflows` directory, for example `deploy-rosa-hcp.yml`, with the following content:
 
@@ -61,21 +63,5 @@ jobs:
           admin-username: "cluster-admin"
           admin-password: ${{ secrets.CI_OPENSHIFT_MAIN_PASSWORD }}
           aws-region: "us-west-2"
-          namespace: "myns"
           s3-backend-bucket: ${{ secrets.TF_S3_BUCKET }}
-
-      - name: Generate kubeconfig
-        uses: nick-fields/retry@v3
-        id: kube_config
-        with:
-          timeout_minutes: 10
-          max_attempts: 40
-          shell: bash
-          retry_wait_seconds: 15
-          command: |
-            oc login --username "cluster-admin" --password ${{ secrets.CI_OPENSHIFT_MAIN_PASSWORD }} "${{ steps.create_cluster.outputs.openshift-server-api }}"
-            oc whoami
-
-            kubectl config rename-context $(oc config current-context) "my-ocp-cluster"
-            kubectl config use "my-ocp-cluster"
 ```
