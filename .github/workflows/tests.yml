@@ -32,7 +32,7 @@ concurrency:
   group: "${{ github.workflow }}-${{ github.actor }}"
 
 env:
-  TESTS_AWS_PROFILE: "infex"
+  AWS_PROFILE: "infex"
   TESTS_AWS_REGION: "eu-west-2"
   TF_S3_BUCKET: "camunda-tf-rosa"
   OCP_ADMIN_USERNAME: "cluster-admin"
@@ -78,9 +78,9 @@ jobs:
       # Official action does not support profiles
       - name: Add profile credentials to ~/.aws/credentials
         run: |
-          aws configure set aws_access_key_id ${{ steps.secrets.outputs.AWS_ACCESS_KEY }} --profile ${{ env.TESTS_AWS_PROFILE }}
-          aws configure set aws_secret_access_key ${{ steps.secrets.outputs.AWS_SECRET_KEY }} --profile ${{ env.TESTS_AWS_PROFILE }}
-          aws configure set region ${{ env.TESTS_AWS_REGION }} --profile ${{ env.TESTS_AWS_PROFILE }}
+          aws configure set aws_access_key_id ${{ steps.secrets.outputs.AWS_ACCESS_KEY }} --profile ${{ env.AWS_PROFILE }}
+          aws configure set aws_secret_access_key ${{ steps.secrets.outputs.AWS_SECRET_KEY }} --profile ${{ env.AWS_PROFILE }}
+          aws configure set region ${{ env.TESTS_AWS_REGION }} --profile ${{ env.AWS_PROFILE }}
 
       - name: Create Cluster
         timeout-minutes: 125
