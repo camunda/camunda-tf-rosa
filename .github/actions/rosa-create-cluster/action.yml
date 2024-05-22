@@ -116,14 +116,14 @@ runs:
       shell: bash
       run: |
         rosa login --token=${{ inputs.rh-token }}
-        rosa whoami
+        rosa whoami --region="${{ inputs.aws-region }}"
 
     - name: Verify and enable HCP ROSA on AWS Marketplace
       shell: bash
       run: |
         rosa verify quota --region="${{ inputs.aws-region }}"
         rosa verify permissions --region="${{ inputs.aws-region }}"
-        rosa create account-roles --mode auto
+        rosa create account-roles --mode auto --region="${{ inputs.aws-region }}"
 
     - name: Install aws-cli v2
       shell: bash
@@ -200,7 +200,7 @@ runs:
       shell: bash
       id: cluster_info
       run: |
-        rosa describe cluster --output=json -c "${{ steps.apply.outputs.cluster_id }}"
+        rosa describe cluster --output=json -c "${{ steps.apply.outputs.cluster_id }}"  --region="${{ inputs.aws-region }}"
         export cluster_api=$(rosa describe cluster --output=json -c "${{ steps.apply.outputs.cluster_id }}" | jq -r '.api.url')
         echo "cluster_api=$cluster_api"
         echo "cluster_api=$cluster_api" >> "$GITHUB_OUTPUT"

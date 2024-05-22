@@ -32,8 +32,8 @@ concurrency:
   group: "${{ github.workflow }}-${{ github.actor }}"
 
 env:
-  AWS_PROFILE: "infex"
-  AWS_REGION: "eu-west-2"
+  TESTS_AWS_PROFILE: "infex"
+  TESTS_AWS_REGION: "eu-west-2"
   TF_S3_BUCKET: "camunda-tf-rosa"
   OCP_ADMIN_USERNAME: "cluster-admin"
   OCP_NAMESPACE: "myns"
@@ -78,9 +78,9 @@ jobs:
       # Official action does not support profiles
       - name: Add profile credentials to ~/.aws/credentials
         run: |
-          aws configure set aws_access_key_id ${{ steps.secrets.outputs.AWS_ACCESS_KEY }} --profile ${{ env.AWS_PROFILE }}
-          aws configure set aws_secret_access_key ${{ steps.secrets.outputs.AWS_SECRET_KEY }} --profile ${{ env.AWS_PROFILE }}
-          aws configure set region ${{ env.AWS_REGION }} --profile ${{ env.AWS_PROFILE }}
+          aws configure set aws_access_key_id ${{ steps.secrets.outputs.AWS_ACCESS_KEY }} --profile ${{ env.TESTS_AWS_PROFILE }}
+          aws configure set aws_secret_access_key ${{ steps.secrets.outputs.AWS_SECRET_KEY }} --profile ${{ env.TESTS_AWS_PROFILE }}
+          aws configure set region ${{ env.TESTS_AWS_REGION }} --profile ${{ env.TESTS_AWS_PROFILE }}
 
       - name: Create Cluster
         timeout-minutes: 125
@@ -91,7 +91,7 @@ jobs:
           cluster-name: ${{ steps.commit_info.outputs.cluster_name }}
           admin-username: ${{ env.OCP_ADMIN_USERNAME }}
           admin-password: ${{ steps.secrets.outputs.CI_OPENSHIFT_MAIN_PASSWORD }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ env.TESTS_AWS_REGION }}
           s3-backend-bucket: ${{ env.TF_S3_BUCKET }}
 
       - name: Create namespace if not exists
@@ -110,5 +110,5 @@ jobs:
         with:
           rh-token: ${{ steps.secrets.outputs.RH_OPENSHIFT_TOKEN }}
           cluster-name: "${{ steps.commit_info.outputs.cluster_name }}"
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ env.TESTS_AWS_REGION }}
           s3-backend-bucket: ${{ env.TF_S3_BUCKET }}
