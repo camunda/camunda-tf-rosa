@@ -22,6 +22,7 @@ env:
   TF_S3_BUCKET: "camunda-tf-rosa"
 
   ASSIGNEES_ISSUE_ERROR: "Langleu, leiicamundi"
+  ISSUE_TEMPLATE_TITLE: "Failed to cleanup clusters"
 
 jobs:
 
@@ -66,12 +67,26 @@ jobs:
         run: |
           .github/workflows/scripts/destroy-clusters.sh "${{ env.TF_S3_BUCKET }}" ./modules/rosa-hcp/ /tmp/rosa/ ${{ env.MAX_AGE_HOURS_CLUSTER }}
 
+      - name: Close issue in case of success
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          issue_url=$(gh --repo "${{ github.repository }}" search issues  "${{ env.ISSUE_TEMPLATE_TITLE }}" --state=open --label="schedule" --json 'url' | jq '.[0].url' -r)
+
+          if [ -n "$issue_url" ]; then
+            gh issue close --comment "Auto-closing issue as the cleanup has been successfuly ran" "$issue_url"
+          else
+            echo "No open issues found with the specified criteria."
+          fi
+
       - name: Create issue on failure
         if: failure()
         uses: JasonEtco/create-an-issue@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WORKFLOW_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          ISSUE_TEMPLATE_TITLE: ${{ env.ISSUE_TEMPLATE_TITLE }}
         with:
           assignees: "${{ env.ASSIGNEES_ISSUE_ERROR }}"
           update_existing: true
