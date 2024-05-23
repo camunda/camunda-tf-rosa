@@ -90,7 +90,7 @@ for cluster_id in $clusters; do
     exit 1
   fi
 
-  last_modified_timestamp=$(gdate -d "$last_modified" +%s)
+  last_modified_timestamp=$(date -d "$last_modified" +%s)
   if [ -z "$last_modified_timestamp" ]; then
     echo "Error: Failed to convert last modified timestamp to seconds since epoch for cluster $cluster_id"
     exit 1
