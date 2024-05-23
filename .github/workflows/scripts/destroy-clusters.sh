@@ -58,7 +58,11 @@ destroy_cluster() {
   mkdir -p "$temp_dir" || return 1
   cp -R "$MODULES_DIR" "$temp_dir" || return 1
 
+  tree "$MODULES_DIR" "$temp_dir" || return 1
+
   cd "$temp_dir" || return 1
+
+  tree "." || return 1
 
   if ! terraform init -backend-config="bucket=$BUCKET" -backend-config="key=${cluster_folder}/${cluster_id}.tfstate" -backend-config="region=$AWS_REGION"; then return 1; fi
 
