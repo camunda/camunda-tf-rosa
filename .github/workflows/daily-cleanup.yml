@@ -64,7 +64,7 @@ jobs:
           AWS_REGION: "${{ env.TESTS_AWS_REGION }}"
           MAX_AGE_HOURS_CLUSTER: ${{ github.event.inputs.max_age_hours_cluster || env.MAX_AGE_HOURS_CLUSTER }}
         run: |
-          .github/workflows/scripts/destroy-clusters.sh "${{ env.TF_S3_BUCKET }}" ./modules/rosa-hcp/ /tmp/rosa/ ${{ env.MAX_AGE_HOURS_CLUSTER }}
+          .github/workflows/scripts/destroy-clusters.sh "${{ env.TF_S3_BUCKET }}" ./modules/rosa-hcp /tmp/rosa/ ${{ env.MAX_AGE_HOURS_CLUSTER }}
 
       - name: Create issue on failure
         if: failure()

@@ -16,7 +16,7 @@
 #   MIN_AGE_IN_HOURS: The minimum age (in hours) of clusters to be destroyed.
 #
 # Example:
-# ./destroy_clusters.sh tf-state-rosa-ci-eu-west-3 ./modules/rosa-hcp/ /tmp/rosa/ 24
+# ./destroy_clusters.sh tf-state-rosa-ci-eu-west-3 ./modules/rosa-hcp /tmp/rosa/ 24
 #
 # Requirements:
 # - AWS CLI installed and configured with the necessary permissions to access and modify the S3 bucket.
