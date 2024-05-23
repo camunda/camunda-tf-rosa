@@ -33,8 +33,11 @@ concurrency:
 
 env:
   AWS_PROFILE: "infex"
+
+  # please keep those variables synced with daily-cleanup.yml
   TESTS_AWS_REGION: "eu-west-2"
   TF_S3_BUCKET: "camunda-tf-rosa"
+
   OCP_ADMIN_USERNAME: "cluster-admin"
   OCP_NAMESPACE: "myns"
 
