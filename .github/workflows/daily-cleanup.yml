@@ -71,11 +71,12 @@ jobs:
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WORKFLOW_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         run: |
           issue_url=$(gh --repo "${{ github.repository }}" search issues  "${{ env.ISSUE_TEMPLATE_TITLE }}" --state=open --label="schedule" --json 'url' | jq '.[0].url' -r)
 
           if [ -n "$issue_url" ]; then
-            gh issue close --comment "Auto-closing issue as the cleanup has been successfuly ran" "$issue_url"
+            gh issue close --comment "Auto-closing issue as the cleanup has been successfuly ran in ${{ env.WORKFLOW_URL }}." "$issue_url"
           else
             echo "No open issues found with the specified criteria."
           fi
