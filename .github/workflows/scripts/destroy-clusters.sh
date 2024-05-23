@@ -54,11 +54,12 @@ destroy_cluster() {
   local temp_dir="${TEMP_DIR_PREFIX}${cluster_id}"
 
   echo "Copying $MODULES_DIR in $temp_dir"
-  tree "$MODULES_DIR"
-  tree "$temp_dir"
 
   mkdir -p "$temp_dir" || return 1
   cp -R "$MODULES_DIR" "$temp_dir" || return 1
+  tree "$MODULES_DIR"
+  tree "$temp_dir"
+
   cd "$temp_dir" || return 1
 
 
