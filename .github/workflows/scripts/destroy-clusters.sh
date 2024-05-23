@@ -56,7 +56,7 @@ destroy_cluster() {
   echo "Copying $MODULES_DIR in $temp_dir"
 
   mkdir -p "$temp_dir" || return 1
-  cp -R "$MODULES_DIR**" "$temp_dir" || return 1
+  cp -a "$MODULES_DIR." "$temp_dir" || return 1
 
   tree "$MODULES_DIR" "$temp_dir" || return 1
 
