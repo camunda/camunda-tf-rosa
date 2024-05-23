@@ -21,7 +21,6 @@ env:
   TF_S3_BUCKET: "camunda-tf-rosa"
 
   ASSIGNEES_ISSUE_ERROR: "Langleu, leiicamundi"
-  ISSUE_TEMPLATE_TITLE: "Failed to cleanup clusters"
 
 jobs:
 
@@ -72,9 +71,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WORKFLOW_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         run: |
-          issue_url=$(gh --repo "${{ github.repository }}" search issues  "${{ env.ISSUE_TEMPLATE_TITLE }}" --state=open --label="schedule" --json 'url' | jq '.[0].url' -r)
+          issue_url=$(gh --repo "${{ github.repository }}" search issues  "Failed to cleanup clusters" --state=open --label="schedule" --json 'url' | jq '.[0].url' -r)
 
-          if [ -n "$issue_url" ]; then
+          if [ "$issue_url" != "null" ]; then
             gh issue close --comment "Auto-closing issue as the cleanup has been successfuly ran in ${{ env.WORKFLOW_URL }}." "$issue_url"
           else
             echo "No open issues found with the specified criteria."
@@ -86,7 +85,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WORKFLOW_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          ISSUE_TEMPLATE_TITLE: ${{ env.ISSUE_TEMPLATE_TITLE }}
         with:
           assignees: "${{ env.ASSIGNEES_ISSUE_ERROR }}"
           update_existing: true
