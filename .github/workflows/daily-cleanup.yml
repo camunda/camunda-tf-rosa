@@ -58,7 +58,6 @@ jobs:
       - name: Delete clusters
         id: delete_clusters
         timeout-minutes: 125
-        continue-on-error: true
         shell: bash
         env:
           RH_TOKEN: "${{ steps.secrets.outputs.RH_OPENSHIFT_TOKEN }}"
