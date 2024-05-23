@@ -16,7 +16,7 @@
 #   MIN_AGE_IN_HOURS: The minimum age (in hours) of clusters to be destroyed.
 #
 # Example:
-# ./destroy_clusters.sh tf-state-rosa-ci-eu-west-3 ./modules/rosa-hcp ./rosa- 24
+# ./destroy_clusters.sh tf-state-rosa-ci-eu-west-3 ./modules/rosa-hcp/ /tmp/rosa/ 24
 #
 # Requirements:
 # - AWS CLI installed and configured with the necessary permissions to access and modify the S3 bucket.
@@ -57,11 +57,8 @@ destroy_cluster() {
 
   mkdir -p "$temp_dir" || return 1
   cp -R "$MODULES_DIR" "$temp_dir" || return 1
-  tree "$MODULES_DIR"
-  tree "$temp_dir"
 
   cd "$temp_dir" || return 1
-
 
   if ! terraform init -backend-config="bucket=$BUCKET" -backend-config="key=${cluster_folder}/${cluster_id}.tfstate" -backend-config="region=$AWS_REGION"; then return 1; fi
 
