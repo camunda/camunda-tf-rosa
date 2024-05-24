@@ -2,6 +2,7 @@
 name: Daily cleanup cluster
 
 on:
+  pull_request: # TODO: delete me
   workflow_dispatch:
     inputs:
       max_age_hours_cluster:
@@ -35,6 +36,9 @@ jobs:
 
       - name: Install tooling using asdf
         uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6 # v3
+
+      - name: Use repo .tool-version as global version
+        run: cp .tool-versions ~/.tool-versions
 
       - name: Import Secrets
         id: secrets
@@ -91,5 +95,5 @@ jobs:
         with:
           assignees: "${{ env.ASSIGNEES_ISSUE_ERROR }}"
           update_existing: true
-          search_existing: all
+          search_existing: open
           filename: .github/templates/issue_delete_clusters_failed.md
