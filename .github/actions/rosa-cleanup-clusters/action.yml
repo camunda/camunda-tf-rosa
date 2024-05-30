@@ -19,4 +19,4 @@ runs:
       id: delete_clusters
       shell: bash
       run: |
-        ${{ github.action_path }}/scripts/destroy-clusters.sh "${{ inputs.tf-bucket }}" ../../../modules/rosa-hcp/modules/rosa-hcp/ /tmp/rosa/ ${{ inputs.max-age-hours-cluster }}
+        ${{ github.action_path }}/scripts/destroy-clusters.sh "${{ inputs.tf-bucket }}" ${{ github.action_path }}/../../../modules/rosa-hcp/modules/rosa-hcp/ /tmp/rosa/ ${{ inputs.max-age-hours-cluster }}
