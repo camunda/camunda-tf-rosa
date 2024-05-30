@@ -82,6 +82,8 @@ destroy_cluster() {
 clusters=$(aws s3 ls "s3://$BUCKET/" | awk '{print $2}' | sed -n 's#^tfstate-\(.*\)/$#\1#p')
 current_timestamp=$(date +%s)
 
+tree "$MODULES_DIR"
+
 for cluster_id in $clusters; do
   cd "$CURRENT_DIR" || return 1
 
