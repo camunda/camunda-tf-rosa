@@ -13,7 +13,7 @@ on:
     - cron: '0 1 * * *' # At 01:00 everyday.
 
 env:
-  MAX_AGE_HOURS_CLUSTER: 20
+  MAX_AGE_HOURS_CLUSTER: "${{ github.event.inputs.max_age_hours_cluster || '20' }}"
   AWS_PROFILE: "infex"
 
   # please keep those variables synced with tests.yml
@@ -63,13 +63,13 @@ jobs:
       - name: Delete clusters
         id: delete_clusters
         timeout-minutes: 125
-        shell: bash
+        uses: ./.github/actions/rosa-cleanup-clusters
         env:
           RH_TOKEN: "${{ steps.secrets.outputs.RH_OPENSHIFT_TOKEN }}"
           AWS_REGION: "${{ env.TESTS_AWS_REGION }}"
-          MAX_AGE_HOURS_CLUSTER: ${{ github.event.inputs.max_age_hours_cluster || env.MAX_AGE_HOURS_CLUSTER }}
-        run: |
-          .github/workflows/scripts/destroy-clusters.sh "${{ env.TF_S3_BUCKET }}" ./modules/rosa-hcp/ /tmp/rosa/ ${{ env.MAX_AGE_HOURS_CLUSTER }}
+        with:
+          tf-bucket: "${{ env.TF_S3_BUCKET }}"
+          max-age-hours-cluster: "${{ env.MAX_AGE_HOURS_CLUSTER }}"
 
       - name: Close issue in case of success
         shell: bash

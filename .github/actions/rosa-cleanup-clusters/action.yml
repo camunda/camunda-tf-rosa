@@ -1,0 +1,22 @@
+name: Delete ROSA Clusters
+
+description: |
+  This GitHub Action automates the deletion of ROSA (Red Hat OpenShift Service on AWS) clusters using a shell script.
+
+inputs:
+  tf-bucket:
+    description: 'Bucket containing the clusters states'
+    required: true
+  max-age-hours-cluster:
+    description: 'Maximum age of clusters in hours'
+    required: false
+    default: "20"
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Delete clusters
+      id: delete_clusters
+      shell: bash
+      run: |
+        .scripts/destroy-clusters.sh "${{ inputs.tf-bucket }}" ../../../modules/rosa-hcp/modules/rosa-hcp/ /tmp/rosa/ ${{ inputs.max-age-hours-cluster }}
