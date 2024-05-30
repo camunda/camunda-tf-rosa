@@ -8,6 +8,11 @@ on:
         description: "Maximum age of clusters in hours"
         required: true
         default: "20"
+  pull_request:
+    # the paths should be synced with ../labeler.yml
+    paths:
+      - .github/workflows/daily-cleanup.yml
+      - .github/actions/rosa-cleanup-clusters/**
 
   schedule:
     - cron: '0 1 * * *' # At 01:00 everyday.
