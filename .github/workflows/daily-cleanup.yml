@@ -86,6 +86,8 @@ jobs:
               "blocks": [
                 {
                   "type": "section",
+                  "unfurl_links": false,
+                  "unfurl_media": false,
                   "text": {
                     "type": "mrkdwn",
                     "text": ":automation-platform-failure: :mechanic: <${{ github.server_url }}/${{ github.repository }}|[${{ github.event.repository.name }}]> scheduled workflow: ${{ github.workflow }} failed! \n :link: Please check: ${{ env.WORKFLOW_URL }} \n (cc @infraex-medic)"
