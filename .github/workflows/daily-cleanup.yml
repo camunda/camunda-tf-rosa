@@ -25,8 +25,6 @@ env:
   TESTS_AWS_REGION: "eu-west-2"
   TF_S3_BUCKET: "camunda-tf-rosa"
 
-  ASSIGNEES_ISSUE_ERROR: "Langleu, leiicamundi"
-
 jobs:
 
   cleanup-clusters:
@@ -77,38 +75,12 @@ jobs:
           tf-bucket: "${{ env.TF_S3_BUCKET }}"
           max-age-hours-cluster: "${{ env.MAX_AGE_HOURS_CLUSTER }}"
 
-      - name: Close issue in case of success
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          WORKFLOW_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-        run: |
-          issue_url=$(gh --repo "${{ github.repository }}" search issues  "Failed to cleanup clusters" --state=open --label="schedule" --json 'url' | jq '.[0].url' -r)
-
-          if [ "$issue_url" != "null" ]; then
-            gh issue close --comment "Auto-closing issue as the cleanup has been successfuly ran in ${{ env.WORKFLOW_URL }}." "$issue_url"
-          else
-            echo "No open issues found with the specified criteria."
-          fi
-
-      - name: Create issue on failure
-        uses: JasonEtco/create-an-issue@1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5 # v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          WORKFLOW_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-        with:
-          assignees: "${{ env.ASSIGNEES_ISSUE_ERROR }}"
-          update_existing: true
-          search_existing: open
-          filename: .github/templates/issue_delete_clusters_failed.md
-
-
       - name: Notify in Slack in case of failure
         id: slack-notification
         # if: failure()
-        uses: slackapi/slack-github-action@v1.26.0
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # v1.26.0
         with:
-          channel-id: 'C05S0M7KG6A'  # infex-internal
+          channel-id: 'C05S0M7KG6A' # infex-internal
           payload: |
             {
               "blocks": [
@@ -116,7 +88,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":automation-platform-failure: :mechanic: [${{ github.event.repository.name }}] scheduled workflow: ${{ github.workflow }} failed! \n :link: Please check: ${{ env.WORKFLOW_URL }}"
+                    "text": ":automation-platform-failure: :mechanic: [[${{ github.event.repository.name }}]](${{ github.server_url }}/${{ github.repository }}) scheduled workflow: ${{ github.workflow }} failed! \n :link: Please check: ${{ env.WORKFLOW_URL }}"
                   }
                 }
               ]
