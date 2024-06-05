@@ -57,6 +57,7 @@ jobs:
             secret/data/products/infrastructure-experience/ci/common AWS_ACCESS_KEY;
             secret/data/products/infrastructure-experience/ci/common AWS_SECRET_KEY;
             secret/data/products/infrastructure-experience/ci/common RH_OPENSHIFT_TOKEN;
+            secret/data/products/infrastructure-experience/ci/common SLACK_BOT_TOKEN;
 
       # Official action does not support profiles
       - name: Add profile credentials to ~/.aws/credentials
@@ -91,7 +92,6 @@ jobs:
           fi
 
       - name: Create issue on failure
-        if: failure()
         uses: JasonEtco/create-an-issue@1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5 # v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -101,3 +101,26 @@ jobs:
           update_existing: true
           search_existing: open
           filename: .github/templates/issue_delete_clusters_failed.md
+
+
+      - name: Notify in Slack in case of failure
+        id: slack-notification
+        # if: failure()
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          channel-id: 'C05S0M7KG6A'  # infex-internal
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":automation-platform-failure: :mechanic: [${{ github.event.repository.name }}] scheduled workflow: ${{ github.workflow }} failed! \n :link: Please check: ${{ env.WORKFLOW_URL }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ steps.secrets.outputs.SLACK_BOT_TOKEN }}
+          WORKFLOW_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

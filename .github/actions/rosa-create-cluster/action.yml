@@ -216,6 +216,10 @@ runs:
         shell: bash
         retry_wait_seconds: 15
         command: |
+          : # see https://github.com/nick-fields/retry/issues/133
+          set -o errexit
+          set -o pipefail
+
           oc login --username "${{ inputs.admin-username }}" --password "${{ inputs.admin-password }}" "${{ steps.cluster_info.outputs.cluster_api }}"
           rosa grant user cluster-admin --cluster="${{ inputs.cluster-name }}" --user="${{ inputs.admin-username }}" --region="${{ inputs.aws-region }}"
 
