@@ -38,7 +38,7 @@ env:
   TESTS_AWS_REGION: "eu-west-2"
   TF_S3_BUCKET: "camunda-tf-rosa"
 
-  OCP_ADMIN_USERNAME: "cluster-admin"
+  OCP_ADMIN_USERNAME: "kube-admin"
   OCP_NAMESPACE: "myns"
 
 jobs:
