@@ -9,7 +9,7 @@ This GitHub Action automates the deployment of a ROSA (Red Hat OpenShift Service
 | `rh-token`          | Red Hat Hybrid Cloud Console Token                           | true     |                  |
 | `cluster-name`      | Name of the ROSA cluster to deploy                           | true     |                  |
 | `admin-password`    | Admin password for the ROSA cluster                          | true     |                  |
-| `admin-username`    | Admin username for the ROSA cluster                          | false    | `cluster-admin`  |
+| `admin-username`    | Admin username for the ROSA cluster                          | false    | `kube-admin`  |
 | `aws-region`        | AWS region where the ROSA cluster will be deployed           | true     |                  |
 | `rosa-cli-version`  | Version of the ROSA CLI to use                               | false    | `latest`         |
 | `awscli-version`    | Version of the AWS CLI to use                                | false    | __see `action.yml`__       |
@@ -60,7 +60,7 @@ jobs:
         with:
           rh-token: ${{ secrets.RH_OPENSHIFT_TOKEN }}
           cluster-name: "my-ocp-cluster"
-          admin-username: "cluster-admin"
+          admin-username: "kube-admin"
           admin-password: ${{ secrets.CI_OPENSHIFT_MAIN_PASSWORD }}
           aws-region: "us-west-2"
           s3-backend-bucket: ${{ secrets.TF_S3_BUCKET }}

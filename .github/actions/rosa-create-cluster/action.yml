@@ -17,7 +17,7 @@ inputs:
     required: true
   admin-username:
     description: 'Admin username for the ROSA cluster'
-    default: "cluster-admin"
+    default: "kube-admin"
     required: true
   aws-region:
     description: 'AWS region where the ROSA cluster will be deployed'

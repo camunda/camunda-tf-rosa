@@ -141,7 +141,7 @@ jobs:
         with:
           rh-token: ${{ secrets.RH_OPENSHIFT_TOKEN }}
           cluster-name: "my-ocp-cluster"
-          admin-username: "cluster-admin"
+          admin-username: "kube-admin"
           admin-password: ${{ secrets.CI_OPENSHIFT_MAIN_PASSWORD }}
           aws-region: "us-west-2"
           s3-backend-bucket: ${{ secrets.TF_S3_BUCKET }}
