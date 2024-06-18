@@ -14,7 +14,7 @@ jobs:
     name: links-check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
 
       - name: Get Current Timestamp
         id: timestamp
@@ -45,7 +45,7 @@ jobs:
       - name: Notify in Slack in case of failure
         id: slack-notification
         if: failure() && github.event_name == 'schedule'
-        uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@705df1af7d06626b8c6838f58123bb3bf84fc093 # main
+        uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@4307a7b51fa981235895ab7682d8f34cdb7b6304 # main
         with:
           vault_addr: ${{ secrets.VAULT_ADDR }}
           vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
