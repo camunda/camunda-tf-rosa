@@ -35,7 +35,7 @@ inputs:
     description: 'Version of the OpenShift to install'
     required: true
     # renovate: datasource=endoflife-date depName=red-hat-openshift versioning=semver
-    default: "4.15.11"
+    default: "4.15.17"
   replicas:
     description: 'Number of replicas for the ROSA cluster'
     required: true
@@ -163,7 +163,7 @@ runs:
         echo "terraform-state-url=${terraform_state_url}" >> "$GITHUB_OUTPUT"
 
     - name: Checkout Repository rosa modules
-      uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4
+      uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
       with:
         repository: "camunda/camunda-tf-rosa"
         ref: ${{ inputs.tf-modules-revision }}
