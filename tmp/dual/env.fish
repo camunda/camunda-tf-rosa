@@ -4,8 +4,15 @@ set -x REGION_1 eu-west-2
 set -x CLUSTER_0 cl-oc-1b
 set -x CLUSTER_1 cl-oc-2
 
-set -x CLUSTER_0_VPC_CIDR "10.65.0.0/16"
-set -x CLUSTER_1_VPC_CIDR "10.64.0.0/16"
+set -x CLUSTER_0_VPC_CIDR "10.0.0.0/16"
+set -x CLUSTER_0_MACHINE_CIDR "10.0.0.0/18"
+set -x CLUSTER_0_SERVICE_CIDR "10.0.128.0/18"
+set -x CLUSTER_0_POD_CIDR "10.0.64.0/18"
+
+set -x CLUSTER_1_VPC_CIDR "10.1.0.0/16"
+set -x CLUSTER_1_MACHINE_CIDR "10.1.0.0/18"
+set -x CLUSTER_1_SERVICE_CIDR "10.1.128.0/18"
+set -x CLUSTER_1_POD_CIDR "10.1.64.0/18"
 
 set -x CAMUNDA_NAMESPACE_0 "camunda-$CLUSTER_0"
 set -x CAMUNDA_NAMESPACE_0_FAILOVER "$CAMUNDA_NAMESPACE_0-failover"
@@ -25,8 +32,7 @@ set -x HELM_CHART_VERSION 10.1.0
 #
 # terraform init -backend-config="bucket=camunda-tf-rosa" -backend-config="key=tfstate-$CLUSTER_0/$CLUSTER_0.tfstate" -backend-config="region=eu-west-2"
 #
-# terraform plan -out rosa.plan -var "cluster_name=$CLUSTER_0" -var "htpasswd_password=$KUBEADMIN_PASSWORD" -var "offline_access_token=$RH_TOKEN" -var "replicas=4" -var "vpc_cidr_block=$CLUSTER_0_VPC_CIDR"
-#
+# terraform plan -out rosa.plan -var "cluster_name=$CLUSTER_0" -var "htpasswd_password=$KUBEADMIN_PASSWORD" -var "offline_access_token=$RH_TOKEN" -var "replicas=4" -var "vpc_cidr_block=$CLUSTER_0_VPC_CIDR"  -var "machine_cidr_block=$CLUSTER_0_MACHINE_CIDR"  -var "service_cidr_block=$CLUSTER_0_SERVICE_CIDR"  -var "pod_cidr_block=$CLUSTER_0_POD_CIDR"
 # terraform apply "rosa.plan"
 
 # Setup cluster 1
@@ -37,8 +43,8 @@ set -x HELM_CHART_VERSION 10.1.0
 #
 # terraform init -backend-config="bucket=camunda-tf-rosa" -backend-config="key=tfstate-$CLUSTER_1/$CLUSTER_1.tfstate" -backend-config="region=eu-west-2"
 #
-# terraform plan -out rosa.plan -var "cluster_name=$CLUSTER_1" -var "htpasswd_password=$KUBEADMIN_PASSWORD" -var "offline_access_token=$RH_TOKEN" -var "replicas=4" -var "vpc_cidr_block=$CLUSTER_1_VPC_CIDR"
-#
+# terraform plan -out rosa.plan -var "cluster_name=$CLUSTER_1" -var "htpasswd_password=$KUBEADMIN_PASSWORD" -var "offline_access_token=$RH_TOKEN" -var "replicas=4" -var "vpc_cidr_block=$CLUSTER_1_VPC_CIDR"  -var "machine_cidr_block=$CLUSTER_1_MACHINE_CIDR"  -var "service_cidr_block=$CLUSTER_1_SERVICE_CIDR"  -var "pod_cidr_block=$CLUSTER_1_POD_CIDR"
+
 # terraform apply "rosa.plan"
 
 

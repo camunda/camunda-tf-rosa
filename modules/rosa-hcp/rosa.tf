@@ -18,13 +18,17 @@ module "rosa_hcp" {
   compute_machine_type = var.compute_node_instance_type
   tags                 = local.tags
 
-  machine_cidr = module.vpc.cidr_block
+  machine_cidr = var.machine_cidr_block
+  service_cidr = var.service_cidr_block
+  pod_cidr     = var.pod_cidr_block
   properties   = { rosa_creator_arn = data.aws_caller_identity.current.arn }
 
 
   replicas               = var.replicas
   aws_availability_zones = module.vpc.availability_zones
-  aws_subnet_ids         = concat(module.vpc.public_subnets, module.vpc.private_subnets)
+  aws_subnet_ids = concat(
+    module.vpc.public_subnets, module.vpc.private_subnets,
+  )
 
   host_prefix = var.host_prefix
 
@@ -38,7 +42,9 @@ module "rosa_hcp" {
   wait_for_create_complete            = true
   wait_for_std_compute_nodes_complete = true
 
-  depends_on = [module.vpc]
+  depends_on = [
+    module.vpc,
+  ]
 }
 
 module "htpasswd_idp" {
