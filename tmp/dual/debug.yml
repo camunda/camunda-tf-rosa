@@ -17,7 +17,7 @@ spec:
         - -c
         - >-
           apt update &&
-          apt install -y nmap dnsutils curl &&
+          apt install -y iputils-ping nmap dnsutils curl &&
           nmap --script-updatedb &&
           echo "container is ready" &&
           sleep 3d

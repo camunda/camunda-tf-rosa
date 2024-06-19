@@ -3,26 +3,26 @@ locals {
   cluster_name = "cl-oc"
   owner = {
     region                = "eu-central-1"
-    vpc_cidr_block        = "10.65.0.0/16" # vpc for the cluster and pod range
-    vpc_id                = "vpc-09a1612536ad29394"
+    vpc_cidr_block        = "10.0.0.0/16" # vpc for the cluster and pod range
+    vpc_id                = "vpc-09ccc319996dd4bc0"
     region_full_name      = "frankfurt"
-    security_group_id     = "sg-09cda37a849a5b2ee"
-    public_route_table_id = "rtb-053610e929036af2d"
+    security_group_id     = "sg-004866bcdd02107da"
+    public_route_table_id = "rtb-0e3fd607c0ca3487c"
     private_route_table_ids = toset([
-      "rtb-0b1072f0047e11765",
-      "rtb-0897438ad799e34ee"
+      "rtb-0cabbf147b597155a",
+      "rtb-0d795d2579a2eb9c9"
     ])
   }
   accepter = {
     region                = "eu-west-2"
-    vpc_cidr_block        = "10.64.0.0/16" # vpc for the cluster and pod range
-    vpc_id                = "vpc-0f3b5372380f3b53e"
+    vpc_cidr_block        = "10.1.0.0/16" # vpc for the cluster and pod range
+    vpc_id                = "vpc-080575788830ffa0c"
     region_full_name      = "london"
-    security_group_id     = "sg-0aab15e804953617b"
-    public_route_table_id = "rtb-0b6ad63dfd1159339"
+    security_group_id     = "sg-089e2aadf37c3052d"
+    public_route_table_id = "rtb-0076e264f43c2f7d8"
     private_route_table_ids = toset([
-      "rtb-09c4b68b270432944",
-      "rtb-021a1f60580d83fb6"
+      "rtb-0cd6a6bfaf21a2837",
+      "rtb-03e84a7c9f5f7259e"
     ])
   }
 }

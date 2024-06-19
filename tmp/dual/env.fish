@@ -87,9 +87,9 @@ set -x CLUSTER_1_API_URL (rosa list cluster --output json | jq ".[] | select(.na
 # 1.2 kubectl --context $CLUSTER_1 apply -f internal-dns-lb.yml
 # 2.1 kubectl --context $CLUSTER_0 apply -f debug.yml
 # 2.2 kubectl --context $CLUSTER_1 apply -f debug.yml
-# 3. Shell into the created debug container
-# 4. Retrieve the ELB : kubectl --context $CLUSTER_0 --namespace=openshift-dns get svc
-# 5. perform a udp dns request:
+# 3. (optional) Shell into the created debug container
+# 4. (optional)  Retrieve the ELB : kubectl --context $CLUSTER_0 --namespace=openshift-dns get svc
+# 5. (optional) perform a udp dns request:
 # dig google.fr @a59ec8ba767d34d08b12728db7c17117-380671b6a5fa3f94.elb.eu-central-1.amazonaws.com
 # dig dns-default.openshift-dns @a59ec8ba767d34d08b12728db7c17117-380671b6a5fa3f94.elb.eu-central-1.amazonaws.com
 # root@ubuntu-with-nmap:/# dig dns-default.openshift-dns.svc.cluster.local @a59ec8ba767d34d08b12728db7c17117-380671b6a5fa3f94.elb.eu-central-1.amazonaws.com
