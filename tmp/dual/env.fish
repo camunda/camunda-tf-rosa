@@ -4,12 +4,8 @@ set -x REGION_1 eu-west-2
 set -x CLUSTER_0 cl-oc-1b
 set -x CLUSTER_1 cl-oc-2
 
-set -x CLUSTER_0_ID (rosa list cluster --output json | jq ".[] | select(.name == \"$CLUSTER_0\") | .id" -r)
-set -x CLUSTER_0_API_URL (rosa list cluster --output json | jq ".[] | select(.name == \"$CLUSTER_0\") | .api.url" -r)
-
-set -x CLUSTER_1_ID (rosa list cluster --output json | jq ".[] | select(.name == \"$CLUSTER_1\") | .id" -r)
-set -x CLUSTER_1_API_URL (rosa list cluster --output json | jq ".[] | select(.name == \"$CLUSTER_1\") | .api.url"  -r)
-
+set -x CLUSTER_0_VPC_CIDR "10.65.0.0/16"
+set -x CLUSTER_1_VPC_CIDR "10.64.0.0/16"
 
 set -x CAMUNDA_NAMESPACE_0 "camunda-$CLUSTER_0"
 set -x CAMUNDA_NAMESPACE_0_FAILOVER "$CAMUNDA_NAMESPACE_0-failover"
@@ -21,6 +17,35 @@ set -x HELM_RELEASE_NAME camunda
 # renovate: datasource helm depName camunda-platform registryUrl https://helm.camunda.io
 set -x HELM_CHART_VERSION 10.1.0
 
+# Setup cluster 0
+# cd tmp/rosa-hcp-eu-central-1b
+# set -x AWS_REGION "$REGION_0"
+# set -x RH_TOKEN "yourToken"
+# set -x KUBEADMIN_PASSWORD "yourPassword"
+#
+# terraform init -backend-config="bucket=camunda-tf-rosa" -backend-config="key=tfstate-$CLUSTER_0/$CLUSTER_0.tfstate" -backend-config="region=eu-west-2"
+#
+# terraform plan -out rosa.plan -var "cluster_name=$CLUSTER_0" -var "htpasswd_password=$KUBEADMIN_PASSWORD" -var "offline_access_token=$RH_TOKEN" -var "replicas=4" -var "vpc_cidr_block=$CLUSTER_0_VPC_CIDR"
+#
+# terraform apply "rosa.plan"
+
+# Setup cluster 1
+# cd tmp/rosa-hcp-eu-west-2
+# set -x AWS_REGION "$REGION_1"
+# set -x RH_TOKEN "yourToken"
+# set -x KUBEADMIN_PASSWORD "yourPassword"
+#
+# terraform init -backend-config="bucket=camunda-tf-rosa" -backend-config="key=tfstate-$CLUSTER_1/$CLUSTER_1.tfstate" -backend-config="region=eu-west-2"
+#
+# terraform plan -out rosa.plan -var "cluster_name=$CLUSTER_1" -var "htpasswd_password=$KUBEADMIN_PASSWORD" -var "offline_access_token=$RH_TOKEN" -var "replicas=4" -var "vpc_cidr_block=$CLUSTER_1_VPC_CIDR"
+#
+# terraform apply "rosa.plan"
+
+
+set -x CLUSTER_0_ID (rosa list cluster --output json | jq ".[] | select(.name == \"$CLUSTER_0\") | .id" -r)
+set -x CLUSTER_0_API_URL (rosa list cluster --output json | jq ".[] | select(.name == \"$CLUSTER_0\") | .api.url" -r)
+set -x CLUSTER_1_ID (rosa list cluster --output json | jq ".[] | select(.name == \"$CLUSTER_1\") | .id" -r)
+set -x CLUSTER_1_API_URL (rosa list cluster --output json | jq ".[] | select(.name == \"$CLUSTER_1\") | .api.url"  -r)
 
 # LOGIN CLUSTER 0
 # rosa grant user cluster-admin --cluster="$CLUSTER_0" --user=kubeadmin
@@ -55,9 +80,9 @@ set -x HELM_CHART_VERSION 10.1.0
 # 1.1 kubectl --context $CLUSTER_0 apply -f internal-dns-lb.yml
 # 1.2 kubectl --context $CLUSTER_1 apply -f internal-dns-lb.yml
 # 2.1 kubectl --context $CLUSTER_0 apply -f debug.yml
-# 2.2 kubectl --context $CLUSTER_0 apply -f debug.yml
+# 2.2 kubectl --context $CLUSTER_1 apply -f debug.yml
 # 3. Shell into the created debug container
-# 4. Retrieve the ELB : kubectl --context $CLUSTER_0 --namespace=openshift-dns get sv
+# 4. Retrieve the ELB : kubectl --context $CLUSTER_0 --namespace=openshift-dns get svc
 # 5. perform a udp dns request:
 # dig google.fr @a59ec8ba767d34d08b12728db7c17117-380671b6a5fa3f94.elb.eu-central-1.amazonaws.com
 # dig dns-default.openshift-dns @a59ec8ba767d34d08b12728db7c17117-380671b6a5fa3f94.elb.eu-central-1.amazonaws.com
@@ -114,66 +139,7 @@ set -x HELM_CHART_VERSION 10.1.0
 # ;; MSG SIZE  rcvd: 143
 
 # 6. Now we will configure the forwarding of the requests from the cluster DNS Operator:
-# # TODO: update the python script, until that, replace the kubectl commands with values
-# TODO: also mention that hardcoding ips is not really strong
-
-# ### Cluster 0 - Start ### and ### Cluster 0 - End ###
-# and insert it at the end of your dns-default configmap in Cluster 0
-
-# oc --context $CLUSTER_1 edit dns.operator/default
-
-# ### Cluster 0 - Start ###
-# spec:
-#   servers:
-#   - name: camunda-cl-oc-2
-#     zones:
-#     - camunda-cl-oc-2.svc.cluster.local
-#     forwardPlugin:
-#       policy: Random
-#       upstreams:
-#       - # <kubectl --context $CLUSTER_1 --namespace=openshift-dns get svc dns-default-lb -o "jsonpath={.status.loadBalancer.ingress[0].hostname}">
-#   - name: camunda-cl-oc-2-failover
-#     zones:
-#     - camunda-cl-oc-2-failover.svc.cluster.local
-#     forwardPlugin:
-#       policy: Random
-#       upstreams:
-#       - # <kubectl --context $CLUSTER_1 --namespace=openshift-dns get svc dns-default-lb -o "jsonpath={.status.loadBalancer.ingress[0].hostname}">
-# ### Cluster 0 - End ###
-
-# Please copy the following between
-# ### Cluster 1 - Start ### and ### Cluster 1 - End ###
-# and insert it at the end of your dns-default configmap in Cluster 1
-
-# oc --context $CLUSTER_0 edit dns.operator/default
-
-# ### Cluster 1 - Start ###
-# spec:
-#   servers:
-#   - name: camunda-cl-oc-1b
-#     zones:
-#     - camunda-cl-oc-1b.svc.cluster.local
-#     forwardPlugin:
-#       policy: Random
-#       upstreams:
-#       - # <kubectl --context $CLUSTER_0 --namespace=openshift-dns get svc dns-default-lb -o "jsonpath={.status.loadBalancer.ingress[0].hostname}">
-#   - name: camunda-cl-oc-1b-failover
-#     zones:
-#     - camunda-cl-oc-1b-failover.svc.cluster.local
-#     forwardPlugin:
-#       policy: Random
-#       upstreams:
-#       - # <kubectl --context $CLUSTER_0 --namespace=openshift-dns get svc dns-default-lb -o "jsonpath={.status.loadBalancer.ingress[0].hostname}">
-# ### Cluster 1 - End ###
-
-# e.g.
-# ─λ kubectl --context $CLUSTER_0 --namespace=openshift-dns get svc dns-default-lb -o "j
-# sonpath={.status.loadBalancer.ingress[0].hostname}"
-# a59ec8ba767d34d08b12728db7c17117-380671b6a5fa3f94.elb.eu-central-1.amazonaws.com⏎
-# ╭─oc at MacBook-Pro-de-oc in ⌁/Documents/work/git/camunda-tf-rosa/tmp/dual (renovate/patch-grouped …1⚑1)
-# ╰─λ kubectl --context $CLUSTER_1 --namespace=openshift-dns get svc dns-default-lb -o "jsonpath={.status.load
-# Balancer.ingress[0].hostname}"
-# aaa79614aa08e4f1aa495aecee450fa4-9c9ac9a4fd16ee2d.elb.eu-central-1.amazonaws.com⏎
+# python generate_core_dns_entry.py
 
 # Now we will test the dns chaining: ./test_dns_chaining.sh
 # this one use unprivileged nginx

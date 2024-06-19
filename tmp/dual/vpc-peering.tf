@@ -4,25 +4,25 @@ locals {
   owner = {
     region                = "eu-central-1"
     vpc_cidr_block        = "10.65.0.0/16" # vpc for the cluster and pod range
-    vpc_id                = ""
+    vpc_id                = "vpc-09a1612536ad29394"
     region_full_name      = "frankfurt"
-    security_group_id     = ""
-    public_route_table_id = ""
+    security_group_id     = "sg-09cda37a849a5b2ee"
+    public_route_table_id = "rtb-053610e929036af2d"
     private_route_table_ids = toset([
-      "",
-      ""
+      "rtb-0b1072f0047e11765",
+      "rtb-0897438ad799e34ee"
     ])
   }
   accepter = {
     region                = "eu-west-2"
-    vpc_cidr_block        = "10.66.0.0/16" # vpc for the cluster and pod range
-    vpc_id                = ""
+    vpc_cidr_block        = "10.64.0.0/16" # vpc for the cluster and pod range
+    vpc_id                = "vpc-0f3b5372380f3b53e"
     region_full_name      = "london"
-    security_group_id     = ""
-    public_route_table_id = ""
+    security_group_id     = "sg-0aab15e804953617b"
+    public_route_table_id = "rtb-0b6ad63dfd1159339"
     private_route_table_ids = toset([
-      "",
-      ""
+      "rtb-09c4b68b270432944",
+      "rtb-021a1f60580d83fb6"
     ])
   }
 }
