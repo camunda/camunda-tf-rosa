@@ -9,12 +9,23 @@ data:
   Caddyfile: |
     {
         auto_https off
+        debug
+
+        servers :8080 {
+          protocols h1 h2c
+        }
+
+        servers :8443 {
+          protocols h2 h3
+        }
+
     }
 
     http://$ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN:8080 {
         #   domain level:     7        6     5       4    3    2       1        0
         #                sample-nginx.zeebe.rosa.cl-oc-2.dlyd.p3.openshiftapps.com
-        reverse_proxy {http.request.host.labels.$ZEEBE_DOMAIN_DEPTH}.$ZEEBE_SERVICE.$ZEEBE_NAMESPACE.svc.cluster.local:$ZEEBE_SERVICE_PORT
+        method h2c
+        reverse_proxy {http.request.host.labels.$ZEEBE_DOMAIN_DEPTH}.$ZEEBE_SERVICE.$ZEEBE_NAMESPACE.svc.cluster.local:26502
     }
 ---
 apiVersion: v1
@@ -51,12 +62,20 @@ spec:
         volumeMounts:
         - name: caddy-config
           mountPath: /opt/app-root/src/
+        - name: caddy-local-config
+          mountPath: /.config
+        - name: caddy-local
+          mountPath: /.local
         ports:
         - containerPort: 8080
       volumes:
       - name: caddy-config
         configMap:
           name: caddy-config
+      - name: caddy-local
+        emptyDir: {}
+      - name: caddy-local-config
+        emptyDir: {}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
