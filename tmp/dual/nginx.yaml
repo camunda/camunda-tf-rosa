@@ -9,12 +9,15 @@ spec:
   hostname: sample-nginx
   subdomain: sample-nginx-peer
   containers:
-  - image: nginxinc/nginx-unprivileged:latest
+  - image: traefik/whoami
     imagePullPolicy: IfNotPresent
     name: nginx
     ports:
     - name: http
       containerPort: 8080
+    command:
+      - "/whoami"
+      - "--port=8080"
     securityContext:
       allowPrivilegeEscalation: false
       capabilities:
@@ -31,7 +34,7 @@ metadata:
   name: sample-nginx-peer
 spec:
   ports:
-  - port: 80
+  - port: 8080
   selector:
     app: sample-nginx
-  clusterIP: None
+  clusterIP: None # address the pods directly

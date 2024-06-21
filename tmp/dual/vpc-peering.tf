@@ -14,15 +14,15 @@ locals {
     ])
   }
   accepter = {
-    region                = "eu-west-2"
+    region                = "eu-west-1"
     vpc_cidr_block        = "10.1.0.0/16" # vpc for the cluster and pod range
-    vpc_id                = "vpc-080575788830ffa0c"
-    region_full_name      = "london"
-    security_group_id     = "sg-089e2aadf37c3052d"
-    public_route_table_id = "rtb-0076e264f43c2f7d8"
+    vpc_id                = "vpc-0edbde411a1308ebf"
+    region_full_name      = "irland"
+    security_group_id     = "sg-02149d776568512db"
+    public_route_table_id = "rtb-07b4eb46134bf6814"
     private_route_table_ids = toset([
-      "rtb-0cd6a6bfaf21a2837",
-      "rtb-03e84a7c9f5f7259e"
+      "rtb-050ea3d5ad1fffd41",
+      "rtb-052a3263615a4a048"
     ])
   }
 }

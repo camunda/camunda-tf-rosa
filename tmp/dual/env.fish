@@ -1,18 +1,18 @@
 set -x REGION_0 eu-central-1
-set -x REGION_1 eu-west-2
+set -x REGION_1 eu-west-1
 
 set -x CLUSTER_0 cl-oc-1b
 set -x CLUSTER_1 cl-oc-2
 
 set -x CLUSTER_0_VPC_CIDR "10.0.0.0/16"
 set -x CLUSTER_0_MACHINE_CIDR "10.0.0.0/18"
-set -x CLUSTER_0_SERVICE_CIDR "10.0.128.0/18"
 set -x CLUSTER_0_POD_CIDR "10.0.64.0/18"
+set -x CLUSTER_0_SERVICE_CIDR "10.0.128.0/18"
 
 set -x CLUSTER_1_VPC_CIDR "10.1.0.0/16"
 set -x CLUSTER_1_MACHINE_CIDR "10.1.0.0/18"
-set -x CLUSTER_1_SERVICE_CIDR "10.1.128.0/18"
 set -x CLUSTER_1_POD_CIDR "10.1.64.0/18"
+set -x CLUSTER_1_SERVICE_CIDR "10.1.128.0/18"
 
 set -x CAMUNDA_NAMESPACE_0 "camunda-$CLUSTER_0"
 set -x CAMUNDA_NAMESPACE_0_FAILOVER "$CAMUNDA_NAMESPACE_0-failover"
@@ -36,7 +36,7 @@ set -x HELM_CHART_VERSION 10.1.0
 # terraform apply "rosa.plan"
 
 # Setup cluster 1
-# cd tmp/rosa-hcp-eu-west-2
+# cd tmp/rosa-hcp-eu-west-1
 # set -x AWS_REGION "$REGION_1"
 # set -x RH_TOKEN "yourToken"
 # set -x KUBEADMIN_PASSWORD "yourPassword"
@@ -150,4 +150,98 @@ set -x CLUSTER_1_API_URL (rosa list cluster --output json | jq ".[] | select(.na
 # Now we will test the dns chaining: ./test_dns_chaining.sh
 # this one use unprivileged nginx
 
-# Note: if we loose a node, the absence of the usage of the lb, make it hard to update..
+# Note: it only works in k9s...
+
+################ New method with ingress:
+
+
+# I. Configure Ingress
+
+# follow: https://access.redhat.com/solutions/5220631
+
+# oc edit --context $CLUSTER_0  ingresscontroller -n openshift-ingress-operator
+# then add:
+#   routeAdmission:
+#    wildcardPolicy: WildcardsAllowed
+
+# oc edit --context $CLUSTER_1  ingresscontroller -n openshift-ingress-operator
+# then add:
+#   routeAdmission:
+#    wildcardPolicy: WildcardsAllowed
+
+set -x CLUSTER_0_BASE_DOMAIN (rosa list cluster --output json | jq ".[] | select(.name == \"$CLUSTER_0\") | .dns.base_domain" -r)
+set -x CLUSTER_0_DOMAIN_PREFIX (rosa list cluster --output json | jq ".[] | select(.name == \"$CLUSTER_0\") | .domain_prefix" -r)
+set -x CLUSTER_0_DOMAIN "rosa.$CLUSTER_0_DOMAIN_PREFIX.$CLUSTER_0_BASE_DOMAIN"
+
+set -x CLUSTER_1_BASE_DOMAIN (rosa list cluster --output json | jq ".[] | select(.name == \"$CLUSTER_0\") | .dns.base_domain" -r)
+set -x CLUSTER_1_DOMAIN_PREFIX (rosa list cluster --output json | jq ".[] | select(.name == \"$CLUSTER_0\") | .domain_prefix" -r)
+set -x CLUSTER_1_DOMAIN "rosa.$CLUSTER_0_DOMAIN_PREFIX.$CLUSTER_0_BASE_DOMAIN"
+
+# pre-req clusters
+
+# then you need to allow wildcard policy at the router level
+oc patch --context $CLUSTER_0 ingresscontroller default -n openshift-ingress-operator --type='merge' -p '{"spec": {"routeAdmission": {"wildcardPolicy": "WildcardsAllowed"}}}'
+oc get --context $CLUSTER_0 ingresscontroller default -n openshift-ingress-operator -o jsonpath='{.status.conditions[?(@.type=="Available")].status}'
+
+oc patch --context $CLUSTER_1 ingresscontroller default -n openshift-ingress-operator --type='merge' -p '{"spec": {"routeAdmission": {"wildcardPolicy": "WildcardsAllowed"}}}'
+oc get --context $CLUSTER_1 ingresscontroller default -n openshift-ingress-operator -o jsonpath='{.status.conditions[?(@.type=="Available")].status}'
+
+# define the zeebe wildcard domain
+set -x CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN "*.zeebe.$CLUSTER_0_DOMAIN"
+set -x CLUSTER_0_ROUTER_ELB_DNS_CNAME_TARGET (kubectl --context $CLUSTER_0 get service router-default --namespace openshift-ingress -o json | jq '.status.loadBalancer.ingress[0].hostname' -r)
+
+set -x CLUSTER_1_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN "*.zeebe.$CLUSTER_1_DOMAIN"
+set -x CLUSTER_1_ROUTER_ELB_DNS_CNAME_TARGET (kubectl --context $CLUSTER_1 get service router-default --namespace openshift-ingress -o json | jq '.status.loadBalancer.ingress[0].hostname' -r)
+
+# Register the DNS CNAME
+
+# apply DNSRecord
+ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN=$CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN \
+  ROUTER_ELB_DNS_CNAME_TARGET=$CLUSTER_0_ROUTER_ELB_DNS_CNAME_TARGET \
+  envsubst < caddy-openshift-reqs.yml.tpl | kubectl --context $CLUSTER_0 apply -f -
+
+ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN=$CLUSTER_1_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN \
+  ROUTER_ELB_DNS_CNAME_TARGET=$CLUSTER_1_ROUTER_ELB_DNS_CNAME_TARGET \
+  envsubst < caddy-openshift-reqs.yml.tpl | kubectl --context $CLUSTER_1 apply -f -
+
+# check it as been applied correctly:
+oc --context $CLUSTER_0 describe dnsrecord zeebe-route-openshift --namespace openshift-ingress-operator
+oc --context $CLUSTER_1 describe dnsrecord zeebe-route-openshift --namespace openshift-ingress-operator
+
+# ensure ns exists
+kubectl --context $CLUSTER_0 get namespace "$CAMUNDA_NAMESPACE_0" || kubectl create namespace "$CAMUNDA_NAMESPACE_0"
+kubectl --context $CLUSTER_1 get namespace "$CAMUNDA_NAMESPACE_1" || kubectl create namespace "$CAMUNDA_NAMESPACE_1"
+
+
+# now deploy the caddy reverse proxy for zeebe for each cluster
+
+## Cluster 0
+
+ZEEBE_NAMESPACE="$CAMUNDA_NAMESPACE_0" \
+  ZEEBE_SERVICE="$HELM_RELEASE_NAME-zeebe" \
+  ZEEBE_SERVICE_PORT="26502" \
+  ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN="$CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" \
+  ZEEBE_DOMAIN_DEPTH=(echo "$CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" | awk -F"." '{print NF-1}' ) \
+  envsubst < caddy.yml.tpl | kubectl --context "$CLUSTER_0" --namespace "$CAMUNDA_NAMESPACE_0" apply -f -
+
+# check everythin is okay
+kubectl --context "$CLUSTER_0" --namespace "$CAMUNDA_NAMESPACE_0" get configmap/caddy-config
+kubectl --context "$CLUSTER_0" --namespace "$CAMUNDA_NAMESPACE_0" get service/caddy-reverse-zeebe
+kubectl --context "$CLUSTER_0" --namespace "$CAMUNDA_NAMESPACE_0" get deployment.apps/caddy
+kubectl --context "$CLUSTER_0" --namespace "$CAMUNDA_NAMESPACE_0" get ingress.networking.k8s.io/caddy-reverse-zeebe-ingress
+
+## Cluster 1
+
+
+ZEEBE_NAMESPACE="$CAMUNDA_NAMESPACE_1" \
+  ZEEBE_SERVICE="$HELM_RELEASE_NAME-zeebe" \
+  ZEEBE_SERVICE_PORT="26502" \
+  ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN="$CLUSTER_1_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" \
+  ZEEBE_DOMAIN_DEPTH=(echo "$CLUSTER_1_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" | awk -F"." '{print NF-1}' ) \
+  envsubst < caddy.yml.tpl | kubectl --context "$CLUSTER_1" --namespace "$CAMUNDA_NAMESPACE_1" apply -f -
+
+# check everythin is okay
+kubectl --context "$CLUSTER_1" --namespace "$CAMUNDA_NAMESPACE_1" get configmap/caddy-config
+kubectl --context "$CLUSTER_1" --namespace "$CAMUNDA_NAMESPACE_1" get service/caddy-reverse-zeebe
+kubectl --context "$CLUSTER_1" --namespace "$CAMUNDA_NAMESPACE_1" get deployment.apps/caddy
+kubectl --context "$CLUSTER_1" --namespace "$CAMUNDA_NAMESPACE_1" get ingress.networking.k8s.io/caddy-reverse-zeebe-ingress
