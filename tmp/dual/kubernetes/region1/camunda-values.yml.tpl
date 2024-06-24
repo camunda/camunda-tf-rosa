@@ -43,6 +43,34 @@ zeebe:
     value: "1s"
   - name: ZEEBE_BROKER_NETWORK_ADVERTISEDHOST
     value: ${DOLLAR}(K8S_NAME).$ZEEBE_FORWARDER_DOMAIN
+  - name: ZEEBE_BROKER_NETWORK_SECURITY_ENABLED
+    value: "true"
+  - name: ZEEBE_BROKER_NETWORK_SECURITY_CERTIFICATECHAINPATH
+    value: "/usr/local/zeebe/config/tls.crt"
+  - name: ZEEBE_BROKER_NETWORK_SECURITY_PRIVATEKEYPATH
+    value: "/usr/local/zeebe/config/tls.key"
+  extraVolumeMounts:
+    - name: certificate
+      mountPath: /usr/local/zeebe/config/tls.crt
+      subPath: tls.crt
+    - name: key
+      mountPath: /usr/local/zeebe/config/tls.key
+      subPath: tls.key
+  extraVolumes:
+    - name: certificate
+      secret:
+        secretName: zeebe-tls-cert
+        items:
+          - key: tls.crt
+            path: tls.crt
+        defaultMode: 420
+    - name: key
+      secret:
+        secretName: zeebe-tls-cert
+        items:
+          - key: tls.key
+            path: tls.key
+        defaultMode: 420
 
 zeebeGateway:
   ingress:

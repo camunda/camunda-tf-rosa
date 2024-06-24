@@ -51,44 +51,12 @@ zeebe:
   clusterSize: 8
   partitionCount: 8
   replicationFactor: 4
-  env:
-  - name: ZEEBE_BROKER_DATA_SNAPSHOTPERIOD
-    value: "5m"
-  - name: ZEEBE_BROKER_DATA_DISKUSAGECOMMANDWATERMARK
-    value: "0.85"
-  - name: ZEEBE_BROKER_DATA_DISKUSAGEREPLICATIONWATERMARK
-    value: "0.87"
-  - name: ZEEBE_BROKER_CLUSTER_INITIALCONTACTPOINTS
-    value: "$ZEEBE_BROKER_CLUSTER_INITIALCONTACTPOINTS"
-  - name: ZEEBE_BROKER_EXPORTERS_ELASTICSEARCHREGION0_CLASSNAME
-    value: "io.camunda.zeebe.exporter.ElasticsearchExporter"
-  - name: ZEEBE_BROKER_EXPORTERS_ELASTICSEARCHREGION0_ARGS_URL
-    value: "$ZEEBE_BROKER_EXPORTERS_ELASTICSEARCHREGION0_ARGS_URL"
-  - name: ZEEBE_BROKER_EXPORTERS_ELASTICSEARCHREGION1_CLASSNAME
-    value: "io.camunda.zeebe.exporter.ElasticsearchExporter"
-  - name: ZEEBE_BROKER_EXPORTERS_ELASTICSEARCHREGION1_ARGS_URL
-    value: "$ZEEBE_BROKER_EXPORTERS_ELASTICSEARCHREGION1_ARGS_URL"
-  # Enable JSON logging for Google Cloud Stackdriver
-  - name: ZEEBE_LOG_APPENDER
-    value: Stackdriver
-  - name: ZEEBE_LOG_STACKDRIVER_SERVICENAME
-    value: zeebe
-  - name: ZEEBE_LOG_STACKDRIVER_SERVICEVERSION
-    valueFrom:
-      fieldRef:
-        fieldPath: metadata.namespace
-  - name: ZEEBE_BROKER_CLUSTER_MEMBERSHIP_PROBETIMEOUT
-    value: "500ms"
-  - name: ZEEBE_BROKER_CLUSTER_MEMBERSHIP_PROBEINTERVAL
-    value: "2s"
-  - name: ZEEBE_BROKER_EXPERIMENTAL_RAFT_SNAPSHOTREQUESTTIMEOUT
-    value: "10s"
-  - name: ZEEBE_BROKER_CLUSTER_MESSAGECOMPRESSION
-    value: "GZIP"
-  - name: ZEEBE_BROKER_BACKPRESSURE_AIMD_REQUESTTIMEOUT
-    value: "1s"
   pvcSize: 1Gi
 
+  readinessProbe:
+    scheme: HTTPS
+  livenessProbe:
+    scheme: HTTPS
   resources:
     requests:
       cpu: "100m"
@@ -99,15 +67,6 @@ zeebe:
 
 zeebe-gateway:
   replicas: 1
-
-  env:
-  - name: ZEEBE_GATEWAY_CLUSTER_MESSAGECOMPRESSION
-    value: "GZIP"
-  - name: ZEEBE_GATEWAY_CLUSTER_MEMBERSHIP_PROBETIMEOUT
-    value: "500ms"
-  - name: ZEEBE_GATEWAY_CLUSTER_MEMBERSHIP_PROBEINTERVAL
-    value: "2s"
-
   resources:
     requests:
       cpu: "100m"
