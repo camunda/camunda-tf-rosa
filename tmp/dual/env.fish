@@ -168,38 +168,46 @@ set -x CLUSTER_0_BASE_DOMAIN (rosa list cluster --output json | jq ".[] | select
 set -x CLUSTER_0_DOMAIN_PREFIX (rosa list cluster --output json | jq ".[] | select(.name == \"$CLUSTER_0\") | .domain_prefix" -r)
 set -x CLUSTER_0_DOMAIN "rosa.$CLUSTER_0_DOMAIN_PREFIX.$CLUSTER_0_BASE_DOMAIN"
 set -x CLUSTER_0_APPS_DOMAIN (kubectl --context $CLUSTER_0 get IngressController default -n openshift-ingress-operator -o jsonpath='{.spec.domain}')
+set -x CLUSTER_0_ZEEBE_INGRESS_CONTROLLER_DOMAIN "zeebe.$CLUSTER_0_DOMAIN"
 
 set -x CLUSTER_1_BASE_DOMAIN (rosa list cluster --output json | jq ".[] | select(.name == \"$CLUSTER_1\") | .dns.base_domain" -r)
 set -x CLUSTER_1_DOMAIN_PREFIX (rosa list cluster --output json | jq ".[] | select(.name == \"$CLUSTER_1\") | .domain_prefix" -r)
 set -x CLUSTER_1_DOMAIN "rosa.$CLUSTER_1_DOMAIN_PREFIX.$CLUSTER_1_BASE_DOMAIN"
 set -x CLUSTER_1_APPS_DOMAIN (kubectl --context $CLUSTER_1 get IngressController default -n openshift-ingress-operator -o jsonpath='{.spec.domain}')
+set -x CLUSTER_1_ZEEBE_INGRESS_CONTROLLER_DOMAIN "zeebe.$CLUSTER_1_DOMAIN"
 
 # pre-req clusters
 
 # then you need to allow wildcard policy at the router level follow: https://access.redhat.com/solutions/5220631
-oc patch --context $CLUSTER_0 ingresscontroller default -n openshift-ingress-operator --type='merge' -p '{"spec": {"routeAdmission": {"wildcardPolicy": "WildcardsAllowed"}}}'
-oc get --context $CLUSTER_0 ingresscontroller default -n openshift-ingress-operator -o jsonpath='{.status.conditions[?(@.type=="Available")].status}'
+# oc patch --context $CLUSTER_0 ingresscontroller default -n openshift-ingress-operator --type='merge' -p '{"spec": {"routeAdmission": {"wildcardPolicy": "WildcardsAllowed"}}}'
+# oc get --context $CLUSTER_0 ingresscontroller default -n openshift-ingress-operator -o jsonpath='{.status.conditions[?(@.type=="Available")].status}'
 
-oc patch --context $CLUSTER_1 ingresscontroller default -n openshift-ingress-operator --type='merge' -p '{"spec": {"routeAdmission": {"wildcardPolicy": "WildcardsAllowed"}}}'
-oc get --context $CLUSTER_1 ingresscontroller default -n openshift-ingress-operator -o jsonpath='{.status.conditions[?(@.type=="Available")].status}'
+# oc patch --context $CLUSTER_1 ingresscontroller default -n openshift-ingress-operator --type='merge' -p '{"spec": {"routeAdmission": {"wildcardPolicy": "WildcardsAllowed"}}}'
+# oc get --context $CLUSTER_1 ingresscontroller default -n openshift-ingress-operator -o jsonpath='{.status.conditions[?(@.type=="Available")].status}'
+
+# create a dedicated ingress controller for zeebe
+DOMAIN=(echo "$CLUSTER_0_ZEEBE_INGRESS_CONTROLLER_DOMAIN_WILDCARD" | sed 's/^*\.//') envsubst < ingress-controller/ingress-controller.yml.tpl | kubectl --context $CLUSTER_0 apply -f -
+DOMAIN=(echo "$CLUSTER_1_ZEEBE_INGRESS_CONTROLLER_DOMAIN_WILDCARD" | sed 's/^*\.//') envsubst < ingress-controller/ingress-controller.yml.tpl | kubectl --context $CLUSTER_1 apply -f -
 
 # define the zeebe wildcard domain
-set -x CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN "*.zeebe.$CLUSTER_0_DOMAIN"
-set -x CLUSTER_0_ROUTER_ELB_DNS_CNAME_TARGET (kubectl --context $CLUSTER_0 get service router-default --namespace openshift-ingress -o json | jq '.status.loadBalancer.ingress[0].hostname' -r)
+set -x CLUSTER_0_ZEEBE_INGRESS_CONTROLLER_DOMAIN_WILDCARD "*.$CLUSTER_0_ZEEBE_INGRESS_CONTROLLER_DOMAIN"
+set -x CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN "*.ptp.$CLUSTER_0_ZEEBE_INGRESS_CONTROLLER_DOMAIN"
+set -x CLUSTER_0_ROUTER_ELB_DNS_CNAME_TARGET (kubectl --context $CLUSTER_0 get service router-zeebe-ingress --namespace openshift-ingress -o json | jq '.status.loadBalancer.ingress[0].hostname' -r)
 
-set -x CLUSTER_1_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN "*.zeebe.$CLUSTER_1_DOMAIN"
-set -x CLUSTER_1_ROUTER_ELB_DNS_CNAME_TARGET (kubectl --context $CLUSTER_1 get service router-default --namespace openshift-ingress -o json | jq '.status.loadBalancer.ingress[0].hostname' -r)
+set -x CLUSTER_1_ZEEBE_INGRESS_CONTROLLER_DOMAIN_WILDCARD "*.$CLUSTER_1_ZEEBE_INGRESS_CONTROLLER_DOMAIN"
+set -x CLUSTER_1_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN "*.ptp.$CLUSTER_1_ZEEBE_INGRESS_CONTROLLER_DOMAIN"
+set -x CLUSTER_1_ROUTER_ELB_DNS_CNAME_TARGET (kubectl --context $CLUSTER_1 get service router-zeebe-ingress --namespace openshift-ingress -o json | jq '.status.loadBalancer.ingress[0].hostname' -r)
 
 # Register the DNS CNAME
 
-# apply DNSRecord
-ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN=$CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN \
-  ROUTER_ELB_DNS_CNAME_TARGET=$CLUSTER_0_ROUTER_ELB_DNS_CNAME_TARGET \
-  envsubst < caddy-openshift-reqs.yml.tpl | kubectl --context $CLUSTER_0 apply -f -
+# apply DNSRecord for the ingress controller
+ZEEBE_INGRESS_WILDCARD_DOMAIN=$CLUSTER_0_ZEEBE_INGRESS_CONTROLLER_DOMAIN_WILDCARD \
+ROUTER_ELB_DNS_CNAME_TARGET=$CLUSTER_0_ROUTER_ELB_DNS_CNAME_TARGET \
+envsubst < zeebe-dnsrecords.yml.tpl | kubectl --context $CLUSTER_0 apply -f -
 
-ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN=$CLUSTER_1_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN \
-  ROUTER_ELB_DNS_CNAME_TARGET=$CLUSTER_1_ROUTER_ELB_DNS_CNAME_TARGET \
-  envsubst < caddy-openshift-reqs.yml.tpl | kubectl --context $CLUSTER_1 apply -f -
+ZEEBE_INGRESS_WILDCARD_DOMAIN=$CLUSTER_1_ZEEBE_INGRESS_CONTROLLER_DOMAIN_WILDCARD \
+ROUTER_ELB_DNS_CNAME_TARGET=$CLUSTER_1_ROUTER_ELB_DNS_CNAME_TARGET \
+envsubst < zeebe-dnsrecords.yml.tpl | kubectl --context $CLUSTER_1 apply -f -
 
 # check it as been applied correctly:
 oc --context $CLUSTER_0 describe dnsrecord zeebe-route-openshift --namespace openshift-ingress-operator
@@ -208,9 +216,6 @@ oc --context $CLUSTER_1 describe dnsrecord zeebe-route-openshift --namespace ope
 # enable http2 on the ingress controller
 # oc --context $CLUSTER_0 annotate ingresscontrollers/default ingress.operator.openshift.io/default-enable-http2=true -n openshift-ingress-operator
 # oc --context $CLUSTER_1 annotate ingresscontrollers/default ingress.operator.openshift.io/default-enable-http2=true -n openshift-ingress-operator
-
-# create a dedicated ingress controller for zeebe
-DOMAIN=(echo "$CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" | sed 's/^*\.//') envsubst < ingress-controller/ingress-controller.yml.tpl | kubectl --context $CLUSTER_0 apply -f -
 
 # Now we need to generate the certificates, we will deploy cert-manager to do it
 # based on https://cloud.redhat.com/experts/rosa/dynamic-certificates/
@@ -280,12 +285,34 @@ kubectl --context $CLUSTER_1 describe clusterissuer letsencryptissuer
 
 # we can now generate a certificate for the custom domain of zeebe
 # /!\ this can take several minutes
-CLUSTER_ZEEBE_FORWARDER_DOMAIN="$CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" envsubst < zeebe-cert.yml.tpl | kubectl --context $CLUSTER_0 --namespace "$CAMUNDA_NAMESPACE_0" apply -f -
-CLUSTER_ZEEBE_FORWARDER_DOMAIN="$CLUSTER_1_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" envsubst < zeebe-cert.yml.tpl | kubectl --context $CLUSTER_1 --namespace "$CAMUNDA_NAMESPACE_1" apply -f -
+CLUSTER_ZEEBE_CN_FORWARDER_DOMAIN="$CLUSTER_0_ZEEBE_INGRESS_CONTROLLER_DOMAIN_WILDCARD" \
+CLUSTER_ZEEBE_FORWARDER_DOMAIN="$CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" \
+envsubst < zeebe-cert.yml.tpl | kubectl --context $CLUSTER_0 --namespace "$CAMUNDA_NAMESPACE_0" apply -f -
+
+CLUSTER_ZEEBE_CN_FORWARDER_DOMAIN="$CLUSTER_1_ZEEBE_INGRESS_CONTROLLER_DOMAIN_WILDCARD" \
+CLUSTER_ZEEBE_FORWARDER_DOMAIN="$CLUSTER_1_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" \
+envsubst < zeebe-cert.yml.tpl | kubectl --context $CLUSTER_1 --namespace "$CAMUNDA_NAMESPACE_1" apply -f -
 
 # wait until the certificate is ready
-kubectl --context "$CLUSTER_0" --namespace "$CAMUNDA_NAMESPACE_0" get certificate.cert-manager.io/zeebe-tls-cert
-kubectl --context "$CLUSTER_1" --namespace "$CAMUNDA_NAMESPACE_1" get certificate.cert-manager.io/zeebe-tls-cert
+kubectl --context "$CLUSTER_0" --namespace "$CAMUNDA_NAMESPACE_0" get certificate.cert-manager.io/zeebe-tls-cert --watch
+kubectl --context "$CLUSTER_1" --namespace "$CAMUNDA_NAMESPACE_1" get certificate.cert-manager.io/zeebe-tls-cert --watch
+
+# now we generate a self-signed certificate for zeebe
+set -x ZEEBE_SERVICE "$HELM_RELEASE_NAME-zeebe"
+
+ZEEBE_FORWARDER_DOMAIN="$CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" \
+ZEEBE_SERVICE="$ZEEBE_SERVICE" \
+ZEEBE_NAMESPACE="$CAMUNDA_NAMESPACE_0" \
+envsubst < zeebe-broker-certs.yml.tpl | kubectl --context $CLUSTER_0 --namespace "$CAMUNDA_NAMESPACE_0" apply -f -
+
+ZEEBE_FORWARDER_DOMAIN="$CLUSTER_1_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" \
+ZEEBE_SERVICE="$ZEEBE_SERVICE" \
+ZEEBE_NAMESPACE="$CAMUNDA_NAMESPACE_1" \
+envsubst < zeebe-broker-certs.yml.tpl | kubectl --context $CLUSTER_1 --namespace "$CAMUNDA_NAMESPACE_1" apply -f -
+
+# wait until the certificate are ready
+kubectl --context "$CLUSTER_0" --namespace "$CAMUNDA_NAMESPACE_0" get certificate.cert-manager.io/zeebe-local-tls-cert --watch
+kubectl --context "$CLUSTER_1" --namespace "$CAMUNDA_NAMESPACE_1" get certificate.cert-manager.io/zeebe-local-tls-cert --watch
 
 # ensure ns exists
 kubectl --context $CLUSTER_0 get namespace "$CAMUNDA_NAMESPACE_0" || kubectl --context $CLUSTER_0 create namespace "$CAMUNDA_NAMESPACE_0"
@@ -297,10 +324,10 @@ kubectl --context $CLUSTER_1 get namespace "$CAMUNDA_NAMESPACE_1" || kubectl --c
 ## Cluster 0
 
 ZEEBE_NAMESPACE="$CAMUNDA_NAMESPACE_0" \
-  ZEEBE_SERVICE="$HELM_RELEASE_NAME-zeebe" \
-  ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN=$(echo "$CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" | sed 's/^*\./wildcard./') \
-    ZEEBE_DOMAIN_DEPTH=(echo "$CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" | awk -F"." '{print NF-1}' ) \
-      envsubst < caddy.yml.tpl | kubectl --context "$CLUSTER_0" --namespace "$CAMUNDA_NAMESPACE_0" apply -f -
+ZEEBE_SERVICE="$ZEEBE_SERVICE" \
+ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN=$(echo "$CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN") \
+ZEEBE_DOMAIN_DEPTH=(echo "$CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" | awk -F"." '{print NF-1}' ) \
+envsubst < caddy.yml.tpl | kubectl --context "$CLUSTER_0" --namespace "$CAMUNDA_NAMESPACE_0" apply -f -
 
 # check everythin is okay
 kubectl --context "$CLUSTER_0" --namespace "$CAMUNDA_NAMESPACE_0" get configmap/caddy-config
@@ -311,10 +338,10 @@ kubectl --context "$CLUSTER_0" --namespace "$CAMUNDA_NAMESPACE_0" get ingress.ne
 ## Cluster 1
 
 ZEEBE_NAMESPACE="$CAMUNDA_NAMESPACE_1" \
-  ZEEBE_SERVICE="$HELM_RELEASE_NAME-zeebe" \
-  ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN=$(echo "$CLUSTER_1_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" | sed 's/^*\./wildcard./') \
-  ZEEBE_DOMAIN_DEPTH=(echo "$CLUSTER_1_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" | awk -F"." '{print NF-1}' ) \
-  envsubst < caddy.yml.tpl | kubectl --context "$CLUSTER_1" --namespace "$CAMUNDA_NAMESPACE_1" apply -f -
+ZEEBE_SERVICE="$ZEEBE_SERVICE" \
+ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN=$(echo "$CLUSTER_1_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" | sed 's/^*\./wildcard./') \
+ZEEBE_DOMAIN_DEPTH=(echo "$CLUSTER_1_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" | awk -F"." '{print NF-1}' ) \
+envsubst < caddy.yml.tpl | kubectl --context "$CLUSTER_1" --namespace "$CAMUNDA_NAMESPACE_1" apply -f -
 
 # check everythin is okay
 kubectl --context "$CLUSTER_1" --namespace "$CAMUNDA_NAMESPACE_1" get configmap/caddy-config

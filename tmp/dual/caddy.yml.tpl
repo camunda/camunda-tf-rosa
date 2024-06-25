@@ -81,41 +81,45 @@ spec:
         secret:
           secretName: zeebe-tls-cert
 ---
-# apiVersion: networking.k8s.io/v1
-# kind: Ingress
-# metadata:
-#   name: caddy-reverse-zeebe-ingress
-#   annotations:
-#     route.openshift.io/termination: reencrypt
-#     route.openshift.io/destination-ca-certificate-secret: zeebe-tls-cert
-# spec:
-#   rules:
-#   - host: "$ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN"
-#     http:
-#       paths:
-#       - path: /
-#         pathType: Prefix
-#         backend:
-#           service:
-#             name: caddy-reverse-zeebe
-#             port:
-#               number: 8443
-#   tls:
-#   - hosts:
-#     - "$ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN"
-#     secretName: zeebe-tls-cert
-apiVersion: route.openshift.io/v1
-kind: Route
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: caddy-reverse-zeebe-route
+  name: caddy-reverse-zeebe-ingress
+  labels:
+    type: zeebe-router
+  annotations:
+    route.openshift.io/termination: reencrypt
+    route.openshift.io/destination-ca-certificate-secret: zeebe-tls-cert
 spec:
-  host: "$ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN"
-  to:
-    kind: Service
-    name: caddy-reverse-zeebe
-    weight: 100
-  port:
-    targetPort: 8443
+  rules:
+  - host: "$ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: caddy-reverse-zeebe
+            port:
+              number: 8443
   tls:
-    termination: passthrough
-  wildcardPolicy: Subdomain
+  - hosts:
+    - "$ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN"
+    secretName: zeebe-tls-cert
+# apiVersion: route.openshift.io/v1
+# kind: Route
+# metadata:
+#   name: caddy-reverse-zeebe-route
+#   labels:
+#     type: zeebe-router
+# spec:
+#   host: "$ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN"
+#   to:
+#     kind: Service
+#     name: caddy-reverse-zeebe
+#     weight: 100
+#   port:
+#     targetPort: 8443
+#   tls:
+#     termination: passthrough
+#   wildcardPolicy: Subdomain

@@ -10,7 +10,7 @@ metadata:
   namespace: openshift-ingress-operator
 spec:
   # openshift.example.com is my base domain and ocp45 is my cluster ID
-  dnsName: '$ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN.'
+  dnsName: '$ZEEBE_INGRESS_WILDCARD_DOMAIN.'
   recordTTL: 30
   recordType: CNAME
   targets:

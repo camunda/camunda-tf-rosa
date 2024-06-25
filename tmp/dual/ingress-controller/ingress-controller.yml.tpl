@@ -37,3 +37,6 @@ spec:
   unsupportedConfigOverrides: null
   routeAdmission:
     wildcardPolicy: "WildcardsAllowed"
+  routeSelector:
+    matchLabels:
+      type: zeebe-router

@@ -8,6 +8,7 @@ spec:
   issuerRef:
      name: letsencryptissuer
      kind: ClusterIssuer
-  commonName: "$CLUSTER_ZEEBE_FORWARDER_DOMAIN"
+  commonName: "$CLUSTER_ZEEBE_CN_FORWARDER_DOMAIN"
   dnsNames:
+  - "$CLUSTER_ZEEBE_CN_FORWARDER_DOMAIN"
   - "$CLUSTER_ZEEBE_FORWARDER_DOMAIN"
