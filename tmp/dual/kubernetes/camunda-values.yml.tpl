@@ -48,14 +48,17 @@ connectors:
   enabled: false
 
 zeebe:
-  clusterSize: 8
-  partitionCount: 8
-  replicationFactor: 4
+  clusterSize: 2
+  partitionCount: 2
+  replicationFactor: 1
   pvcSize: 1Gi
 
   readinessProbe:
+    enabled: false # todo: revert
     scheme: HTTPS
   livenessProbe:
+    enabled: false # todo: revert
+
     scheme: HTTPS
   resources:
     requests:

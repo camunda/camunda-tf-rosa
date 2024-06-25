@@ -70,14 +70,14 @@ zeebe:
   extraVolumes:
     - name: certificate
       secret:
-        secretName: zeebe-tls-cert
+        secretName: zeebe-local-tls-cert
         items:
           - key: tls.crt
             path: tls.crt
         defaultMode: 420
     - name: key
       secret:
-        secretName: zeebe-tls-cert
+        secretName: zeebe-local-tls-cert
         items:
           - key: tls.key
             path: tls.key

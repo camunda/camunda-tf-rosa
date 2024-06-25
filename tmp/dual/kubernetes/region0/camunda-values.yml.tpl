@@ -43,14 +43,14 @@ zeebeGateway:
   extraVolumes:
     - name: certificate
       secret:
-        secretName: zeebe-tls-cert
+        secretName: zeebe-local-tls-cert
         items:
           - key: tls.crt
             path: tls.crt
         defaultMode: 420
     - name: key
       secret:
-        secretName: zeebe-tls-cert
+        secretName: zeebe-local-tls-cert
         items:
           - key: tls.key
             path: tls.key
@@ -101,6 +101,10 @@ zeebe:
     value: "/usr/local/zeebe/config/tls.crt"
   - name: ZEEBE_BROKER_NETWORK_SECURITY_PRIVATEKEYPATH
     value: "/usr/local/zeebe/config/tls.key"
+  - name: ZEEBE_LOG_LEVEL
+    value: "debug"
+  - name: ATOMIX_LOG_LEVEL
+    value: "debug"
   extraVolumeMounts:
     - name: certificate
       mountPath: /usr/local/zeebe/config/tls.crt
@@ -111,14 +115,14 @@ zeebe:
   extraVolumes:
     - name: certificate
       secret:
-        secretName: zeebe-tls-cert
+        secretName: zeebe-local-tls-cert
         items:
           - key: tls.crt
             path: tls.crt
         defaultMode: 420
     - name: key
       secret:
-        secretName: zeebe-tls-cert
+        secretName: zeebe-local-tls-cert
         items:
           - key: tls.key
             path: tls.key
