@@ -12,7 +12,7 @@ set -x CLUSTER_0_SERVICE_CIDR "10.0.128.0/18"
 set -x CLUSTER_1_VPC_CIDR "10.1.0.0/16"
 set -x CLUSTER_1_MACHINE_CIDR "10.1.0.0/18"
 set -x CLUSTER_1_POD_CIDR "10.1.64.0/18"
-set -x CLUSTER_1_SERVICE_CIDR "10.1.128.0/18"
+set -x CLUSTER_1_SERVICE_CIDR "10.1.128.0/18" # TODO: later use this network for the ingress private only
 
 set -x CAMUNDA_NAMESPACE_0 "camunda-$CLUSTER_0"
 set -x CAMUNDA_NAMESPACE_0_FAILOVER "$CAMUNDA_NAMESPACE_0-failover"
@@ -23,8 +23,6 @@ set -x CAMUNDA_NAMESPACE_1_FAILOVER "$CAMUNDA_NAMESPACE_1-failover"
 set -x HELM_RELEASE_NAME camunda
 # renovate: datasource helm depName camunda-platform registryUrl https://helm.camunda.io
 set -x HELM_CHART_VERSION 10.1.1
-
-set -x LETSENCRYPT_EMAIL youremail@work.com
 
 # 0. Setup cluster 0
 cd tmp/rosa-hcp-eu-central-1b
@@ -69,95 +67,6 @@ kubectl config delete-context "$CLUSTER_1"
 kubectl config rename-context $(oc config current-context) "$CLUSTER_1"
 kubectl config use "$CLUSTER_1"
 
-# (optional) Now we need to patch the flow opening (Security Groups)
-# 0. cd peering
-# 1. Edit vpc-peering.tf, set your values
-# 2. terraform init
-# 3. terraform apply
-
-# Notes:
-# no dns in the kube-system
-# DNS LB setup works only on AWS 'ROSA OK'
-# https://docs.camunda.io/docs/next/self-managed/setup/deploy/amazon/amazon-eks/dual-region/#coredns-configuration
-#
-# Also the dns config is managed by the operator https://docs.openshift.com/container-platform/4.9/networking/dns-operator.html
-# > You are a cluster administrator and have reported an issue with CoreDNS, but need to apply a workaround until the issue is fixed. You can set the managementState field of the DNS Operator to Unmanaged to apply the workaround.
-#
-# no force TCP option available
-
-# Test dns chaining => scc no set correcttly
-
-# 0. cd tmp/dual
-# 1.1 kubectl --context $CLUSTER_0 apply -f internal-dns-lb.yml
-# 1.2 kubectl --context $CLUSTER_1 apply -f internal-dns-lb.yml
-# 2.1 kubectl --context $CLUSTER_0 apply -f debug.yml
-# 2.2 kubectl --context $CLUSTER_1 apply -f debug.yml
-# 3. (optional) Shell into the created debug container
-# 4. (optional)  Retrieve the ELB : kubectl --context $CLUSTER_0 --namespace=openshift-dns get svc
-# 5. (optional) perform a udp dns request:
-# dig google.fr @a59ec8ba767d34d08b12728db7c17117-380671b6a5fa3f94.elb.eu-central-1.amazonaws.com
-# dig dns-default.openshift-dns @a59ec8ba767d34d08b12728db7c17117-380671b6a5fa3f94.elb.eu-central-1.amazonaws.com
-# root@ubuntu-with-nmap:/# dig dns-default.openshift-dns.svc.cluster.local @a59ec8ba767d34d08b12728db7c17117-380671b6a5fa3f94.elb.eu-central-1.amazonaws.com
-# example output
-# ; <<>> DiG 9.18.24-0ubuntu5-Ubuntu <<>> dns-default.openshift-dns.svc.cluster.local @a59ec8ba767d34d08b12728db7c17117-380671b6a5fa3f94.elb.eu-central-1.amazonaws.com
-# ;; global options: +cmd
-# ;; Got answer:
-# ;; WARNING: .local is reserved for Multicast DNS
-# ;; You are currently testing what happens when an mDNS query is leaked to DNS
-# ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 12126
-# ;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
-# ;; WARNING: recursion requested but not available
-
-# ;; OPT PSEUDOSECTION:
-# ; EDNS: version: 0, flags:; udp: 1232
-# ; COOKIE: 4c3bcec06cb05eeb (echoed)
-# ;; QUESTION SECTION:
-# ;dns-default.openshift-dns.svc.cluster.local. IN	A
-
-# ;; ANSWER SECTION:
-# dns-default.openshift-dns.svc.cluster.local. 5 IN A 172.30.0.10
-
-# ;; Query time: 5 msec
-# ;; SERVER: 10.65.57.252#53(a59ec8ba767d34d08b12728db7c17117-380671b6a5fa3f94.elb.eu-central-1.amazonaws.com) (UDP)
-# ;; WHEN: Tue Jun 18 16:26:17 UTC 2024
-# ;; MSG SIZE  rcvd: 143
-
-# When you have confirmed that it works correctly locally, you can do cross region dns queries (just use the opposite ELB server name)
-
-# root@ubuntu-with-nmap:/# dig dns-default.openshift-dns.svc.cluster.local @aaa79614aa08e4f1aa495aecee450fa4-9c9ac9a4fd16ee2d.elb.eu-central-1.amazonaws.com
-
-# ; <<>> DiG 9.18.24-0ubuntu5-Ubuntu <<>> dns-default.openshift-dns.svc.cluster.local @aaa79614aa08e4f1aa495aecee450fa4-9c9ac9a4fd16ee2d.elb.eu-central-1.amazonaws.com
-# ;; global options: +cmd
-# ;; Got answer:
-# ;; WARNING: .local is reserved for Multicast DNS
-# ;; You are currently testing what happens when an mDNS query is leaked to DNS
-# ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 54433
-# ;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
-# ;; WARNING: recursion requested but not available
-
-# ;; OPT PSEUDOSECTION:
-# ; EDNS: version: 0, flags:; udp: 1232
-# ; COOKIE: d86c1ec1c99f97ca (echoed)
-# ;; QUESTION SECTION:
-# ;dns-default.openshift-dns.svc.cluster.local. IN	A
-
-# ;; ANSWER SECTION:
-# dns-default.openshift-dns.svc.cluster.local. 5 IN A 172.30.0.10
-
-# ;; Query time: 6 msec
-# ;; SERVER: 10.66.44.86#53(aaa79614aa08e4f1aa495aecee450fa4-9c9ac9a4fd16ee2d.elb.eu-central-1.amazonaws.com) (UDP)
-# ;; WHEN: Tue Jun 18 16:46:16 UTC 2024
-# ;; MSG SIZE  rcvd: 143
-
-# 6. Now we will configure the forwarding of the requests from the cluster DNS Operator:
-# python generate_core_dns_entry.py
-
-# Now we will test the dns chaining: ./test_dns_chaining.sh
-# this one use unprivileged nginx
-
-# Note: it only works in k9s...
-
-################ New method with ingress:
 
 
 # I. Configure Ingress
@@ -185,17 +94,19 @@ set -x CLUSTER_1_ZEEBE_INGRESS_CONTROLLER_DOMAIN "zeebe.$CLUSTER_1_DOMAIN"
 # oc patch --context $CLUSTER_1 ingresscontroller default -n openshift-ingress-operator --type='merge' -p '{"spec": {"routeAdmission": {"wildcardPolicy": "WildcardsAllowed"}}}'
 # oc get --context $CLUSTER_1 ingresscontroller default -n openshift-ingress-operator -o jsonpath='{.status.conditions[?(@.type=="Available")].status}'
 
+# define the zeebe wildcard domain
+set -x CLUSTER_0_ZEEBE_INGRESS_CONTROLLER_DOMAIN_WILDCARD "*.$CLUSTER_0_ZEEBE_INGRESS_CONTROLLER_DOMAIN"
+set -x CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN "*.ptp.$CLUSTER_0_ZEEBE_INGRESS_CONTROLLER_DOMAIN"
+
+set -x CLUSTER_1_ZEEBE_INGRESS_CONTROLLER_DOMAIN_WILDCARD "*.$CLUSTER_1_ZEEBE_INGRESS_CONTROLLER_DOMAIN"
+set -x CLUSTER_1_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN "*.ptp.$CLUSTER_1_ZEEBE_INGRESS_CONTROLLER_DOMAIN"
+
 # create a dedicated ingress controller for zeebe
 DOMAIN=(echo "$CLUSTER_0_ZEEBE_INGRESS_CONTROLLER_DOMAIN_WILDCARD" | sed 's/^*\.//') envsubst < ingress-controller/ingress-controller.yml.tpl | kubectl --context $CLUSTER_0 apply -f -
 DOMAIN=(echo "$CLUSTER_1_ZEEBE_INGRESS_CONTROLLER_DOMAIN_WILDCARD" | sed 's/^*\.//') envsubst < ingress-controller/ingress-controller.yml.tpl | kubectl --context $CLUSTER_1 apply -f -
 
-# define the zeebe wildcard domain
-set -x CLUSTER_0_ZEEBE_INGRESS_CONTROLLER_DOMAIN_WILDCARD "*.$CLUSTER_0_ZEEBE_INGRESS_CONTROLLER_DOMAIN"
-set -x CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN "*.ptp.$CLUSTER_0_ZEEBE_INGRESS_CONTROLLER_DOMAIN"
-set -x CLUSTER_0_ROUTER_ELB_DNS_CNAME_TARGET (kubectl --context $CLUSTER_0 get service router-zeebe-ingress --namespace openshift-ingress -o json | jq '.status.loadBalancer.ingress[0].hostname' -r)
 
-set -x CLUSTER_1_ZEEBE_INGRESS_CONTROLLER_DOMAIN_WILDCARD "*.$CLUSTER_1_ZEEBE_INGRESS_CONTROLLER_DOMAIN"
-set -x CLUSTER_1_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN "*.ptp.$CLUSTER_1_ZEEBE_INGRESS_CONTROLLER_DOMAIN"
+set -x CLUSTER_0_ROUTER_ELB_DNS_CNAME_TARGET (kubectl --context $CLUSTER_0 get service router-zeebe-ingress --namespace openshift-ingress -o json | jq '.status.loadBalancer.ingress[0].hostname' -r)
 set -x CLUSTER_1_ROUTER_ELB_DNS_CNAME_TARGET (kubectl --context $CLUSTER_1 get service router-zeebe-ingress --namespace openshift-ingress -o json | jq '.status.loadBalancer.ingress[0].hostname' -r)
 
 # Register the DNS CNAME
@@ -217,33 +128,8 @@ oc --context $CLUSTER_1 describe dnsrecord zeebe-route-openshift --namespace ope
 # oc --context $CLUSTER_0 annotate ingresscontrollers/default ingress.operator.openshift.io/default-enable-http2=true -n openshift-ingress-operator
 # oc --context $CLUSTER_1 annotate ingresscontrollers/default ingress.operator.openshift.io/default-enable-http2=true -n openshift-ingress-operator
 
-# Now we need to generate the certificates, we will deploy cert-manager to do it
-# based on https://cloud.redhat.com/experts/rosa/dynamic-certificates/
 
-# Configure AWS IAM Policy
-set -x AWS_ACCOUNT_ID (aws sts get-caller-identity --query Account --output text)
-set -x OIDC_PROVIDER_CLUSTER_0 (oc --context $CLUSTER_0 get authentication.config.openshift.io cluster -o json | jq -r .spec.serviceAccountIssuer| sed -e "s/^https:\/\///")
-set -x OIDC_PROVIDER_CLUSTER_1 (oc --context $CLUSTER_1 get authentication.config.openshift.io cluster -o json | jq -r .spec.serviceAccountIssuer| sed -e "s/^https:\/\///")
-
-set -x POLICY_CLUSTER_0 (aws iam create-policy --policy-name "$CLUSTER_0-cert-manager-r53-policy" --policy-document file://./cert-manager/cert-manager-r53-policy.json --query 'Policy.Arn' --output text)
-echo "$POLICY_CLUSTER_0"
-
-set -x POLICY_CLUSTER_1 (aws iam create-policy --policy-name "$CLUSTER_1-cert-manager-r53-policy" --policy-document file://./cert-manager/cert-manager-r53-policy.json --query 'Policy.Arn' --output text)
-echo "$POLICY_CLUSTER_1"
-
-# create the TrustPolicy for each cluster
-OIDC_PROVIDER=$OIDC_PROVIDER_CLUSTER_0 envsubst < ./cert-manager/TrustPolicy.json.tpl > "./cert-manager/TrustPolicy-$CLUSTER_0.json"
-set -x ROLE_CLUSTER_0 (aws iam create-role --role-name "$CLUSTER_0-cert-manager-operator" --assume-role-policy-document file://./cert-manager/TrustPolicy-$CLUSTER_0.json --query "Role.Arn" --output text)
-
-OIDC_PROVIDER=$OIDC_PROVIDER_CLUSTER_1 envsubst < ./cert-manager/TrustPolicy.json.tpl > "./cert-manager/TrustPolicy-$CLUSTER_1.json"
-set -x ROLE_CLUSTER_1 (aws iam create-role --role-name "$CLUSTER_1-cert-manager-operator" --assume-role-policy-document file://./cert-manager/TrustPolicy-$CLUSTER_1.json --query "Role.Arn" --output text)
-
-# Setup Cluster Manager
-
-# attach the policy to the role
-aws iam attach-role-policy --role-name "$CLUSTER_0-cert-manager-operator" --policy-arn "$POLICY_CLUSTER_0"
-aws iam attach-role-policy --role-name "$CLUSTER_1-cert-manager-operator" --policy-arn "$POLICY_CLUSTER_1"
-
+# Setup Certificate Manager
 oc --context $CLUSTER_0 new-project cert-manager --display-name="Certificate Manager" --description="Project  contains Certificates and Custom Domain related components."
 oc --context $CLUSTER_1 new-project cert-manager --display-name="Certificate Manager" --description="Project  contains Certificates and Custom Domain related components."
 
@@ -255,69 +141,32 @@ kubectl --context $CLUSTER_0 create -f cert-manager/operator-group.yml
 kubectl --context $CLUSTER_1 create -f cert-manager/operator-group.yml
 
 # wait until it is installed
-oc --context "$CLUSTER_0" get csv -n cert-manager-operator
-oc --context "$CLUSTER_1" get csv -n cert-manager-operator
+oc --context "$CLUSTER_0" get csv -n cert-manager-operator --watch
+oc --context "$CLUSTER_1" get csv -n cert-manager-operator --watch
 
-# Now we use the AWS IAM Role to allow cert-manager to perform DNS records to perform ACME challenge resolution (DNS-01)
-kubectl --context "$CLUSTER_0" annotate serviceaccount cert-manager -n cert-manager "eks.amazonaws.com/role-arn=$ROLE_CLUSTER_0"
-oc --context "$CLUSTER_0" --namespace cert-manager rollout restart deployment cert-manager
-kubectl --context "$CLUSTER_1" annotate serviceaccount cert-manager -n cert-manager "eks.amazonaws.com/role-arn=$ROLE_CLUSTER_1"
-oc --context "$CLUSTER_1" --namespace cert-manager rollout restart deployment cert-manager
-
-# tell cert-manager to use public resolvers
-oc --context "$CLUSTER_0" patch certmanager cluster --type='json' -p='[
-      {"op":"add","path":"/spec/controllerConfig","value":{"overrideArgs":["--dns01-recursive-nameservers=1.1.1.1:53,1.0.0.1:53","--dns01-recursive-nameservers-only"]}}
-    ]'
-oc --context "$CLUSTER_1" patch certmanager cluster --type='json' -p='[
-      {"op":"add","path":"/spec/controllerConfig","value":{"overrideArgs":["--dns01-recursive-nameservers=1.1.1.1:53,1.0.0.1:53","--dns01-recursive-nameservers-only"]}}
-    ]'
-
-# Create a ClusterIssuer
-set -x HOSTED_ZONE_ID_CLUSTER_0 (aws route53 list-hosted-zones | jq -r ".HostedZones[] | select(.Name == "\""$CLUSTER_0_DOMAIN."\"" and .Config.PrivateZone == false) | .Id" | sed 's/\/hostedzone\///')
-set -x HOSTED_ZONE_ID_CLUSTER_1 (aws route53 list-hosted-zones | jq -r ".HostedZones[] | select(.Name == "\""$CLUSTER_1_DOMAIN."\"" and .Config.PrivateZone == false) | .Id" | sed 's/\/hostedzone\///')
-
-HOSTED_ZONE_ID="$HOSTED_ZONE_ID_CLUSTER_0" HOSTED_ZONE_REGION="$REGION_0" envsubst < ./cert-manager/cluster-issuer.yml.tpl | kubectl --context $CLUSTER_0 apply -f -
-HOSTED_ZONE_ID="$HOSTED_ZONE_ID_CLUSTER_1" HOSTED_ZONE_REGION="$REGION_1" envsubst < ./cert-manager/cluster-issuer.yml.tpl | kubectl --context $CLUSTER_1 apply -f -
-
-# wait until the cluster issuer is ready
-kubectl --context $CLUSTER_0 describe clusterissuer letsencryptissuer
-kubectl --context $CLUSTER_1 describe clusterissuer letsencryptissuer
-
-# we can now generate a certificate for the custom domain of zeebe
-# /!\ this can take several minutes
-CLUSTER_ZEEBE_CN_FORWARDER_DOMAIN="$CLUSTER_0_ZEEBE_INGRESS_CONTROLLER_DOMAIN_WILDCARD" \
-CLUSTER_ZEEBE_FORWARDER_DOMAIN="$CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" \
-envsubst < zeebe-cert.yml.tpl | kubectl --context $CLUSTER_0 --namespace "$CAMUNDA_NAMESPACE_0" apply -f -
-
-CLUSTER_ZEEBE_CN_FORWARDER_DOMAIN="$CLUSTER_1_ZEEBE_INGRESS_CONTROLLER_DOMAIN_WILDCARD" \
-CLUSTER_ZEEBE_FORWARDER_DOMAIN="$CLUSTER_1_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" \
-envsubst < zeebe-cert.yml.tpl | kubectl --context $CLUSTER_1 --namespace "$CAMUNDA_NAMESPACE_1" apply -f -
-
-# wait until the certificate is ready
-kubectl --context "$CLUSTER_0" --namespace "$CAMUNDA_NAMESPACE_0" get certificate.cert-manager.io/zeebe-tls-cert --watch
-kubectl --context "$CLUSTER_1" --namespace "$CAMUNDA_NAMESPACE_1" get certificate.cert-manager.io/zeebe-tls-cert --watch
-
-# now we generate a self-signed certificate for zeebe
-set -x ZEEBE_SERVICE "$HELM_RELEASE_NAME-zeebe"
-
-ZEEBE_FORWARDER_DOMAIN="$CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" \
-ZEEBE_SERVICE="$ZEEBE_SERVICE" \
-ZEEBE_NAMESPACE="$CAMUNDA_NAMESPACE_0" \
-envsubst < zeebe-broker-certs.yml.tpl | kubectl --context $CLUSTER_0 --namespace "$CAMUNDA_NAMESPACE_0" apply -f -
-
-ZEEBE_FORWARDER_DOMAIN="$CLUSTER_1_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" \
-ZEEBE_SERVICE="$ZEEBE_SERVICE" \
-ZEEBE_NAMESPACE="$CAMUNDA_NAMESPACE_1" \
-envsubst < zeebe-broker-certs.yml.tpl | kubectl --context $CLUSTER_1 --namespace "$CAMUNDA_NAMESPACE_1" apply -f -
-
-# wait until the certificate are ready
-kubectl --context "$CLUSTER_0" --namespace "$CAMUNDA_NAMESPACE_0" get certificate.cert-manager.io/zeebe-local-tls-cert --watch
-kubectl --context "$CLUSTER_1" --namespace "$CAMUNDA_NAMESPACE_1" get certificate.cert-manager.io/zeebe-local-tls-cert --watch
+# For public certificates with Let'sEncrypt, see `LE-certmanager.fish`
 
 # ensure ns exists
 kubectl --context $CLUSTER_0 get namespace "$CAMUNDA_NAMESPACE_0" || kubectl --context $CLUSTER_0 create namespace "$CAMUNDA_NAMESPACE_0"
 kubectl --context $CLUSTER_1 get namespace "$CAMUNDA_NAMESPACE_1" || kubectl --context $CLUSTER_1 create namespace "$CAMUNDA_NAMESPACE_1"
 
+# now we generate a single self-signed certificate for zeebe broker that will be shared in the two clusters
+set -x ZEEBE_SERVICE "$HELM_RELEASE_NAME-zeebe"
+
+ZEEBE_FORWARDER_DOMAIN_CLUSTER_0="$CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" \
+ZEEBE_SERVICE_CLUSTER_0="$ZEEBE_SERVICE" \
+ZEEBE_NAMESPACE_CLUSTER_0="$CAMUNDA_NAMESPACE_0" \
+ZEEBE_FORWARDER_DOMAIN_CLUSTER_1="$CLUSTER_1_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" \
+ZEEBE_SERVICE_CLUSTER_1="$ZEEBE_SERVICE" \
+ZEEBE_NAMESPACE_CLUSTER_1="$CAMUNDA_NAMESPACE_1" \
+envsubst < zeebe-broker-certs.yml.tpl | kubectl --context $CLUSTER_0 --namespace "$CAMUNDA_NAMESPACE_0" apply -f -
+
+# wait until the certificate are ready
+kubectl --context "$CLUSTER_0" --namespace "$CAMUNDA_NAMESPACE_0" get certificate.cert-manager.io/zeebe-local-tls-cert --watch
+
+# TODO: share this certificate on CLUSTER_1
+
+# TODO: concatenante : https://github.com/camunda/camunda-platform-helm/blob/f5c12f13a4496746d0444b866e40499e35a0857b/charts/camunda-platform-latest/templates/zeebe/configmap.yaml#L75
 
 # now deploy the caddy reverse proxy for zeebe for each cluster
 
@@ -325,7 +174,8 @@ kubectl --context $CLUSTER_1 get namespace "$CAMUNDA_NAMESPACE_1" || kubectl --c
 
 ZEEBE_NAMESPACE="$CAMUNDA_NAMESPACE_0" \
 ZEEBE_SERVICE="$ZEEBE_SERVICE" \
-ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN=$(echo "$CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN") \
+ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN="$CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" \
+ZEEBE_PTP_INGRESS_WILDCARD_ROUTE_DOMAIN=$(echo "$CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" | sed 's/^*\./wildcard./') \
 ZEEBE_DOMAIN_DEPTH=(echo "$CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" | awk -F"." '{print NF-1}' ) \
 envsubst < caddy.yml.tpl | kubectl --context "$CLUSTER_0" --namespace "$CAMUNDA_NAMESPACE_0" apply -f -
 
@@ -339,7 +189,8 @@ kubectl --context "$CLUSTER_0" --namespace "$CAMUNDA_NAMESPACE_0" get ingress.ne
 
 ZEEBE_NAMESPACE="$CAMUNDA_NAMESPACE_1" \
 ZEEBE_SERVICE="$ZEEBE_SERVICE" \
-ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN=$(echo "$CLUSTER_1_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" | sed 's/^*\./wildcard./') \
+ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN="$CLUSTER_1_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" \
+ZEEBE_PTP_INGRESS_WILDCARD_ROUTE_DOMAIN=$(echo "$CLUSTER_1_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" | sed 's/^*\./wildcard./') \
 ZEEBE_DOMAIN_DEPTH=(echo "$CLUSTER_1_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN" | awk -F"." '{print NF-1}' ) \
 envsubst < caddy.yml.tpl | kubectl --context "$CLUSTER_1" --namespace "$CAMUNDA_NAMESPACE_1" apply -f -
 
@@ -387,12 +238,12 @@ set -x ZEEBE_BROKER_EXPORTERS_ELASTICSEARCHREGION1_ARGS_URL "fill"
 
 # Global
 
-set -x DOLLAR "\$"
-envsubst < kubernetes/camunda-values.yml.tpl > kubernetes/camunda-values.yml
-
-
 # Make sure to set CHART_VERSION to match the chart version you want to install.
 helm pull camunda/camunda-platform --version "$HELM_CHART_VERSION" --untar --untardir "/tmp/camunda-platform-$HELM_CHART_VERSION"
+
+
+set -x DOLLAR "\$"
+envsubst < kubernetes/camunda-values.yml.tpl > kubernetes/camunda-values.yml
 
 # Cluster 0
 

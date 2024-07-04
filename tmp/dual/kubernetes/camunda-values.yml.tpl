@@ -48,18 +48,18 @@ connectors:
   enabled: false
 
 zeebe:
-  clusterSize: 2
-  partitionCount: 2
-  replicationFactor: 1
+  clusterSize: 4
+  partitionCount: 3
+  replicationFactor: 2
   pvcSize: 1Gi
 
   readinessProbe:
     enabled: false # todo: revert
-    scheme: HTTPS
+    scheme: HTTP
   livenessProbe:
     enabled: false # todo: revert
+    scheme: HTTP
 
-    scheme: HTTPS
   resources:
     requests:
       cpu: "100m"
@@ -70,6 +70,7 @@ zeebe:
 
 zeebe-gateway:
   replicas: 1
+
   resources:
     requests:
       cpu: "100m"

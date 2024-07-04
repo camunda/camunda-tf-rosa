@@ -33,6 +33,12 @@ zeebeGateway:
     value: /usr/local/zeebe/config/tls.crt
   - name: ZEEBE_GATEWAY_SECURITY_PRIVATEKEYPATH
     value: /usr/local/zeebe/config/tls.key
+  - name: ZEEBE_GATEWAY_CLUSTER_SECURITY_ENABLED
+    value: "true"
+  - name: ZEEBE_GATEWAY_CLUSTER_SECURITY_CERTIFICATECHAINPATH
+    value: /usr/local/zeebe/config/tls.crt
+  - name: ZEEBE_GATEWAY_CLUSTER_SECURITY_PRIVATEKEYPATH
+    value: /usr/local/zeebe/config/tls.key
   extraVolumeMounts:
     - name: certificate
       mountPath: /usr/local/zeebe/config/tls.crt
@@ -64,8 +70,11 @@ zeebe:
     value: "0.85"
   - name: ZEEBE_BROKER_DATA_DISKUSAGEREPLICATIONWATERMARK
     value: "0.87"
+  # todo: revert
   - name: ZEEBE_BROKER_CLUSTER_INITIALCONTACTPOINTS
-    value: "$ZEEBE_BROKER_CLUSTER_INITIALCONTACTPOINTS"
+    #value: "camunda-zeebe-0.camunda-zeebe.camunda-cl-oc-1b.svc:26502,camunda-zeebe-1.camunda-zeebe.camunda-cl-oc-1b.svc:26502"
+    #value: "camunda-zeebe-0.camunda-zeebe.camunda-cl-oc-1b.svc:26502,camunda-zeebe-1.camunda-zeebe.camunda-cl-oc-1b.svc:26502"
+    value: "camunda-zeebe-0.caddy-reverse-zeebe.camunda-cl-oc-1b.svc:26502,camunda-zeebe-1.caddy-reverse-zeebe.camunda-cl-oc-1b.svc:26502"
   - name: ZEEBE_BROKER_EXPORTERS_ELASTICSEARCHREGION0_CLASSNAME
     value: "io.camunda.zeebe.exporter.ElasticsearchExporter"
   - name: ZEEBE_BROKER_EXPORTERS_ELASTICSEARCHREGION0_ARGS_URL
@@ -93,8 +102,13 @@ zeebe:
     value: "GZIP"
   - name: ZEEBE_BROKER_BACKPRESSURE_AIMD_REQUESTTIMEOUT
     value: "1s"
+  # todo: revert
+  # - name: ZEEBE_BROKER_NETWORK_ADVERTISEDHOST
+  #   value: ${DOLLAR}(K8S_NAME).$ZEEBE_FORWARDER_DOMAIN
   - name: ZEEBE_BROKER_NETWORK_ADVERTISEDHOST
-    value: ${DOLLAR}(K8S_NAME).$ZEEBE_FORWARDER_DOMAIN
+    value: ${DOLLAR}(K8S_NAME).caddy-reverse-zeebe.camunda-cl-oc-1b.svc
+  - name: ZEEBE_BROKER_NETWORK_ADVERTISEDPORT # TODO: this does not works
+    value: "8443"
   - name: ZEEBE_BROKER_NETWORK_SECURITY_ENABLED
     value: "true"
   - name: ZEEBE_BROKER_NETWORK_SECURITY_CERTIFICATECHAINPATH
@@ -105,7 +119,18 @@ zeebe:
     value: "debug"
   - name: ATOMIX_LOG_LEVEL
     value: "debug"
+
+  # - name: ZEEBE_BROKER_GATEWAY_ENABLE
+  #   value: "true"
+  # - name: ZEEBE_BROKER_GATEWAY_ENABLE
+  #   value: "ZEEBE_BROKER_GATEWAY_NETWORK_HOST"
+
   extraVolumeMounts:
+    - name: tmp-certs
+      mountPath: /usr/local/zeebe/certs/
+    - name: ca
+      mountPath: /usr/local/zeebe/config/ca.crt
+      subPath: ca.crt
     - name: certificate
       mountPath: /usr/local/zeebe/config/tls.crt
       subPath: tls.crt
@@ -113,6 +138,8 @@ zeebe:
       mountPath: /usr/local/zeebe/config/tls.key
       subPath: tls.key
   extraVolumes:
+    - name: tmp-certs
+      emptyDir: {}
     - name: certificate
       secret:
         secretName: zeebe-local-tls-cert
@@ -126,6 +153,13 @@ zeebe:
         items:
           - key: tls.key
             path: tls.key
+        defaultMode: 420
+    - name: ca
+      secret:
+        secretName: zeebe-local-tls-cert
+        items:
+          - key: ca.crt
+            path: ca.crt
         defaultMode: 420
 
 webModeler:

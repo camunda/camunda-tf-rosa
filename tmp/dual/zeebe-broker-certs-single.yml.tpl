@@ -20,11 +20,7 @@ spec:
   - "*.$ZEEBE_NAMESPACE_CLUSTER_0.pod"
   - "*.$ZEEBE_NAMESPACE_CLUSTER_0.pod.cluster.local"
   - "$ZEEBE_FORWARDER_DOMAIN_CLUSTER_0"
-  - "*.$ZEEBE_SERVICE_CLUSTER_1.$ZEEBE_NAMESPACE_CLUSTER_1.svc"
-  - "*.$ZEEBE_SERVICE_CLUSTER_1.$ZEEBE_NAMESPACE_CLUSTER_1.svc.cluster.local"
-  - "*.$ZEEBE_NAMESPACE_CLUSTER_1.pod"
-  - "*.$ZEEBE_NAMESPACE_CLUSTER_1.pod.cluster.local"
-  - "$ZEEBE_FORWARDER_DOMAIN_CLUSTER_1"
   issuerRef:
     name: selfsigned-issuer
     kind: Issuer
+# TODO: this file should deleted in favor of the same with the two clusters
