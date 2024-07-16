@@ -35,7 +35,7 @@ inputs:
     description: 'Version of the OpenShift to install'
     required: true
     # renovate: datasource=endoflife-date depName=red-hat-openshift versioning=semver
-    default: "4.15.18"
+    default: "4.16.1"
   replicas:
     description: 'Number of replicas for the ROSA cluster'
     required: true
