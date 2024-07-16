@@ -48,7 +48,24 @@ variable "availability_zones_count" {
 variable "vpc_cidr_block" {
   type        = string
   description = "value of the CIDR block to use for the VPC"
-  default     = "10.66.0.0/16"
+  default     = "10.0.0.0/16"
+}
+
+variable "machine_cidr_block" {
+  type        = string
+  description = "value of the CIDR block to use for the machine"
+  default     = "10.0.0.0/18"
+}
+
+variable "service_cidr_block" {
+  type        = string
+  description = "value of the CIDR block to use for the services"
+  default     = "10.0.128.0/18"
+}
+variable "pod_cidr_block" {
+  type        = string
+  description = "value of the CIDR block to use for the pods"
+  default     = "10.0.64.0/18"
 }
 
 variable "htpasswd_username" {
