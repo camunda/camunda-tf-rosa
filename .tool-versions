@@ -9,7 +9,7 @@ golang 1.22.5
 
 just 1.32.0
 
-pre-commit 3.7.1
+pre-commit 3.8.0
 
 terraform 1.9.3
 
