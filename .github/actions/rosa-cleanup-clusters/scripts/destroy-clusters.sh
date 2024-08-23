@@ -84,7 +84,21 @@ destroy_cluster() {
 }
 
 # List objects in the S3 bucket and parse the cluster IDs
-clusters=$(aws s3 ls "s3://$BUCKET/" | awk '{print $2}' | sed -n 's#^tfstate-\(.*\)/$#\1#p')
+all_objects=$(aws s3 ls "s3://$BUCKET/")
+aws_exit_code=$?
+
+if [ $aws_exit_code -ne 0 ]; then
+  echo "Error executing the aws s3 ls command (Exit Code: $aws_exit_code):" >&2
+  exit 1
+fi
+
+
+clusters=$(echo "$all_objects" | awk '{print $2}' | sed -n 's#^tfstate-\(.*\)/$#\1#p')
+if [ -z "$clusters" ]; then
+  echo "No objects found in the S3 bucket. Exiting script." >&2
+  exit 0
+fi
+
 current_timestamp=$(date +%s)
 
 for cluster_id in $clusters; do
