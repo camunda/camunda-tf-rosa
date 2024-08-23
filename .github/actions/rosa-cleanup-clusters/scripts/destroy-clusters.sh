@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -o pipefail
+
 # Description:
 # This script performs a Terraform destroy operation for clusters defined in an S3 bucket.
 # It copies the Terraform module directory to a temporary location, initializes Terraform with
