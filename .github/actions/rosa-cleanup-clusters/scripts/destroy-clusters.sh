@@ -48,6 +48,7 @@ MIN_AGE_IN_HOURS=$4
 HTPASSWD_PASSWORD="Fakepassword!!!3893948" # don't change it, it's a fake value for the destruction
 FAILED=0
 CURRENT_DIR=$(pwd)
+AWS_S3_REGION=${AWS_S3_REGION:-$AWS_REGION}
 
 # Function to perform terraform destroy
 destroy_cluster() {
@@ -66,7 +67,9 @@ destroy_cluster() {
 
   tree "." || return 1
 
-  if ! terraform init -backend-config="bucket=$BUCKET" -backend-config="key=${cluster_folder}/${cluster_id}.tfstate" -backend-config="region=$AWS_REGION"; then return 1; fi
+  echo "tf state: bucket=$BUCKET key=${cluster_folder}/${cluster_id}.tfstate region=$AWS_S3_REGION"
+
+  if ! terraform init -backend-config="bucket=$BUCKET" -backend-config="key=${cluster_folder}/${cluster_id}.tfstate" -backend-config="region=$AWS_S3_REGION"; then return 1; fi
 
 
   if ! terraform destroy -auto-approve -var "cluster_name=${cluster_id}" -var "htpasswd_password=$HTPASSWD_PASSWORD" -var "offline_access_token=$RH_TOKEN"; then return 1; fi

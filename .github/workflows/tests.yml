@@ -37,7 +37,8 @@ env:
 
   # please keep those variables synced with daily-cleanup.yml
   TESTS_AWS_REGION: "eu-west-2"
-  TF_S3_BUCKET: "camunda-tf-rosa"
+  TF_S3_BUCKET: "tests-rosa-tf-state-eu-central-1"
+  TF_S3_REGION: "eu-central-1"
 
   OCP_ADMIN_USERNAME: "kube-admin"
   OCP_NAMESPACE: "myns"
@@ -100,6 +101,7 @@ jobs:
           admin-password: ${{ steps.secrets.outputs.CI_OPENSHIFT_MAIN_PASSWORD }}
           aws-region: ${{ env.TESTS_AWS_REGION }}
           s3-backend-bucket: ${{ env.TF_S3_BUCKET }}
+          s3-bucket-region: ${{ env.TF_S3_REGION }}
 
       - name: Create namespace if not exists
         shell: bash
@@ -119,6 +121,7 @@ jobs:
           cluster-name: "${{ steps.commit_info.outputs.cluster_name }}"
           aws-region: ${{ env.TESTS_AWS_REGION }}
           s3-backend-bucket: ${{ env.TF_S3_BUCKET }}
+          s3-bucket-region: ${{ env.TF_S3_REGION }}
 
       - name: Notify in Slack in case of failure
         id: slack-notification
