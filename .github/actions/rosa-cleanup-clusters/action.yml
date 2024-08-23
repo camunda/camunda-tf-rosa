@@ -24,5 +24,5 @@ runs:
         if [ -n "${{ inputs.tf-bucket-region }}" ]; then
           export AWS_S3_REGION="${{ inputs.tf-bucket-region }}"
         fi
-        
+
         ${{ github.action_path }}/scripts/destroy-clusters.sh "${{ inputs.tf-bucket }}" ${{ github.action_path }}/../../../modules/rosa-hcp/ /tmp/rosa/ ${{ inputs.max-age-hours-cluster }}
