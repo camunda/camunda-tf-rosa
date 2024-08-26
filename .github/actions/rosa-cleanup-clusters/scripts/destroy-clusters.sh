@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -o pipefail
+
 # Description:
 # This script performs a Terraform destroy operation for clusters defined in an S3 bucket.
 # It copies the Terraform module directory to a temporary location, initializes Terraform with
@@ -46,6 +48,7 @@ MIN_AGE_IN_HOURS=$4
 HTPASSWD_PASSWORD="Fakepassword!!!3893948" # don't change it, it's a fake value for the destruction
 FAILED=0
 CURRENT_DIR=$(pwd)
+AWS_S3_REGION=${AWS_S3_REGION:-$AWS_REGION}
 
 # Function to perform terraform destroy
 destroy_cluster() {
@@ -64,7 +67,9 @@ destroy_cluster() {
 
   tree "." || return 1
 
-  if ! terraform init -backend-config="bucket=$BUCKET" -backend-config="key=${cluster_folder}/${cluster_id}.tfstate" -backend-config="region=$AWS_REGION"; then return 1; fi
+  echo "tf state: bucket=$BUCKET key=${cluster_folder}/${cluster_id}.tfstate region=$AWS_S3_REGION"
+
+  if ! terraform init -backend-config="bucket=$BUCKET" -backend-config="key=${cluster_folder}/${cluster_id}.tfstate" -backend-config="region=$AWS_S3_REGION"; then return 1; fi
 
 
   if ! terraform destroy -auto-approve -var "cluster_name=${cluster_id}" -var "htpasswd_password=$HTPASSWD_PASSWORD" -var "offline_access_token=$RH_TOKEN"; then return 1; fi
@@ -79,7 +84,21 @@ destroy_cluster() {
 }
 
 # List objects in the S3 bucket and parse the cluster IDs
-clusters=$(aws s3 ls "s3://$BUCKET/" | awk '{print $2}' | sed -n 's#^tfstate-\(.*\)/$#\1#p')
+all_objects=$(aws s3 ls "s3://$BUCKET/")
+aws_exit_code=$?
+
+if [ $aws_exit_code -ne 0 ]; then
+  echo "Error executing the aws s3 ls command (Exit Code: $aws_exit_code):" >&2
+  exit 1
+fi
+
+
+clusters=$(echo "$all_objects" | awk '{print $2}' | sed -n 's#^tfstate-\(.*\)/$#\1#p')
+if [ -z "$clusters" ]; then
+  echo "No objects found in the S3 bucket. Exiting script." >&2
+  exit 0
+fi
+
 current_timestamp=$(date +%s)
 
 for cluster_id in $clusters; do

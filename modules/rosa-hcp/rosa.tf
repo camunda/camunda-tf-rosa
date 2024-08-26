@@ -10,7 +10,7 @@ locals {
 
 module "rosa_hcp" {
   source  = "terraform-redhat/rosa-hcp/rhcs"
-  version = "1.6.2-prerelease.1"
+  version = "1.6.2"
 
   openshift_version = var.openshift_version
   cluster_name      = var.cluster_name
@@ -49,7 +49,7 @@ module "rosa_hcp" {
 
 module "htpasswd_idp" {
   source  = "terraform-redhat/rosa-hcp/rhcs//modules/idp"
-  version = "1.6.2-prerelease.1"
+  version = "1.6.2"
 
   cluster_id         = module.rosa_hcp.cluster_id
   name               = "htpasswd-idp"
@@ -59,7 +59,7 @@ module "htpasswd_idp" {
 
 module "vpc" {
   source  = "terraform-redhat/rosa-hcp/rhcs//modules/vpc"
-  version = "1.6.2-prerelease.1"
+  version = "1.6.2"
 
   name_prefix              = var.cluster_name
   availability_zones_count = var.availability_zones_count
