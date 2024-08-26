@@ -16,6 +16,7 @@ This GitHub Action automates the deployment of a ROSA (Red Hat OpenShift Service
 | `openshift-version` | Version of the OpenShift to install                          | false    | __see `action.yml`__        |
 | `replicas`          | Number of replicas for the ROSA cluster                      | false    | `2`              |
 | `s3-backend-bucket` | Name of the S3 bucket to store Terraform state               | true     |                  |
+| `s3-bucket-region`   | Region of the bucket containing the resources states, if not set, will fallback on `aws-region`                              | false    |                                |
 | `tf-modules-revision`| Git revision of the Terraform modules to use                | false    | `main`           |
 | `tf-modules-path`   | Path where the Terraform ROSA modules will be cloned         | false    | `./.action-tf-modules/rosa/` |
 | `login`             | Authenticate the current kube context on the created cluster | false    | `true`           |

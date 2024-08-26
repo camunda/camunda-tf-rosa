@@ -23,7 +23,8 @@ env:
 
   # please keep those variables synced with tests.yml
   TESTS_AWS_REGION: "eu-west-2"
-  TF_S3_BUCKET: "camunda-tf-rosa"
+  TF_S3_BUCKET: "tests-rosa-tf-state-eu-central-1"
+  TF_S3_REGION: "eu-central-1"
 
 jobs:
 
@@ -72,6 +73,7 @@ jobs:
           AWS_REGION: "${{ env.TESTS_AWS_REGION }}"
         with:
           tf-bucket: "${{ env.TF_S3_BUCKET }}"
+          tf-bucket-region: "${{ env.TF_S3_REGION }}"
           max-age-hours-cluster: "${{ env.MAX_AGE_HOURS_CLUSTER }}"
 
       - name: Notify in Slack in case of failure

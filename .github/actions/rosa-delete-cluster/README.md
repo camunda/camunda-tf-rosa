@@ -10,6 +10,7 @@ This GitHub Action automates the deletion of a ROSA (Red Hat OpenShift Service o
 | `cluster-name`       | Name of the ROSA cluster to delete                       | true     |                                |
 | `aws-region`         | AWS region where the ROSA cluster is deployed            | true     |                                |
 | `s3-backend-bucket`  | Name of the S3 bucket where the Terraform state is stored| true     |                                |
+| `s3-bucket-region`   | Region of the bucket containing the resources states, if not set, will fallback on `aws-region`                              | false    |                                |
 | `awscli-version`     | Version of the aws cli to use                            | false    | __see `action.yml`__                      |
 | `tf-modules-revision`| Git revision of the tf modules to use                    | false    | `main`                         |
 | `tf-modules-path`    | Path where the tf rosa modules will be cloned            | false    | `./.action-tf-modules/rosa/`   |
