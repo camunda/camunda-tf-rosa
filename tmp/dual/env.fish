@@ -22,13 +22,15 @@ set -x CAMUNDA_NAMESPACE_1_FAILOVER "$CAMUNDA_NAMESPACE_1-failover"
 # The Helm release name used for installing Camunda 8 in both Kubernetes clusters
 set -x HELM_RELEASE_NAME camunda
 # renovate: datasource helm depName camunda-platform registryUrl https://helm.camunda.io
-set -x HELM_CHART_VERSION 10.1.1
+set -x HELM_CHART_VERSION 10.3.2
 
 # 0. Setup cluster 0
 cd tmp/rosa-hcp-eu-central-1b
 set -x AWS_REGION "$REGION_0"
 set -x RH_TOKEN "yourToken"
 set -x KUBEADMIN_PASSWORD "yourPassword"
+
+rosa login --token="$RH_TOKEN"
 
 terraform init -backend-config="bucket=camunda-tf-rosa" -backend-config="key=tfstate-$CLUSTER_0/$CLUSTER_0.tfstate" -backend-config="region=eu-west-2"
 
@@ -40,6 +42,8 @@ cd tmp/rosa-hcp-eu-west-1
 set -x AWS_REGION "$REGION_1"
 set -x RH_TOKEN "yourToken"
 set -x KUBEADMIN_PASSWORD "yourPassword"
+
+rosa login --token="$RH_TOKEN"
 #
 terraform init -backend-config="bucket=camunda-tf-rosa" -backend-config="key=tfstate-$CLUSTER_1/$CLUSTER_1.tfstate" -backend-config="region=eu-west-2"
 #
@@ -47,7 +51,7 @@ terraform plan -out rosa.plan -var "cluster_name=$CLUSTER_1" -var "htpasswd_pass
 
 terraform apply "rosa.plan"
 
-
+rosa login --token="$RH_TOKEN"
 set -x CLUSTER_0_ID (rosa list cluster --output json | jq ".[] | select(.name == \"$CLUSTER_0\") | .id" -r)
 set -x CLUSTER_0_API_URL (rosa list cluster --output json | jq ".[] | select(.name == \"$CLUSTER_0\") | .api.url" -r)
 set -x CLUSTER_1_ID (rosa list cluster --output json | jq ".[] | select(.name == \"$CLUSTER_1\") | .id" -r)
