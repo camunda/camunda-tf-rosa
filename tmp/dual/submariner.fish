@@ -12,15 +12,15 @@ kubectl --context $CLUSTER_0 --namespace open-cluster-management get csv --watch
 
 # Install MultiClusterHub
 kubectl --context $CLUSTER_0 apply -f submariner/multi-cluster-hub.yml
-# wait until it's "Running"
-kubectl --context $CLUSTER_0 get mch -n open-cluster-management multiclusterhub -o jsonpath='{.status.phase}'
+# wait until it's "Running", can take up to 10 minutes
+kubectl --context $CLUSTER_0 get mch -n open-cluster-management multiclusterhub --watch
 
 ## II. Deploy Submariner
 
 # Create submariner machine pools (this is required by https://github.com/submariner-io/submariner/issues/1896)
 # (TODO: this could be integrated directly in the tf module
 
-rosa create machinepool --cluster $CLUSTER_0 --name=sm-gw-mp --replicas=2 --labels='submariner.io/gateway=true'
+rosa create machinepool --cluster $CLUSTER_0 --name=sm-gw-mp --replicas=2 --labels='submariner.io/gateway=true' # todo: ideally, deploy accross regions
 rosa list machinepools -c $CLUSTER_0
 
 
@@ -48,7 +48,7 @@ kubectl --context "$CLUSTER_0" get managedclusters "$CLUSTER_0"
 
 
 # Import Cluster 1
-set -x SUB1_TOKEN (oc --context $CLUSTER_1 whoami -t)
+set -x SUB1_TOKEN (oc --context "$CLUSTER_1" whoami -t)
 echo $SUB1_TOKEN
 
 CLUSTER_NAME="$CLUSTER_1" envsubst < submariner/managed-cluster.yml.tpl | kubectl --context "$CLUSTER_0" apply -f -
