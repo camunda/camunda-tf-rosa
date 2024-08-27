@@ -1,0 +1,1 @@
+../../modules/rosa-hcp/outputs.tf
