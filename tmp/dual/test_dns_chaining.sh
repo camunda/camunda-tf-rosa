@@ -17,13 +17,15 @@ ping_instance() {
     local context=$1
     local source_namespace=$2
     local target_namespace=$3
+    local cluster_name=$4
     for ((i=1; i<=5; i++))
     do
         echo "Iteration $i - $source_namespace -> $target_namespace"
-        command_test="kubectl --context \"$context\" exec -n \"$source_namespace\" -it sample-nginx -- curl \"http://sample-nginx.sample-nginx-peer.$target_namespace.svc.cluster.local:8080\""
+        command_test="kubectl --context \"$context\" exec -n default -it ubuntu-with-nmap -- curl \"http://sample-nginx.$cluster_name.sample-nginx-peer.$target_namespace.svc.clusterset.local:8080\""
         echo "Running command: $command_test"
         output=$(eval "$command_test")
-        if output=$(echo "$output" | grep "Welcome to nginx!"); then
+        echo "Output: $output"
+        if output=$(echo "$output" | grep "sample-nginx"); then
             echo "Success: $output"
             return
         else
@@ -35,17 +37,30 @@ ping_instance() {
 }
 
 create_namespace "$CLUSTER_0" "$CAMUNDA_NAMESPACE_0"
+create_namespace "$CLUSTER_1" "$CAMUNDA_NAMESPACE_0"
 create_namespace "$CLUSTER_1" "$CAMUNDA_NAMESPACE_1"
+create_namespace "$CLUSTER_1" "$CAMUNDA_NAMESPACE_0"
 
-kubectl --context "$CLUSTER_0" apply -f nginx.yaml -n "$CAMUNDA_NAMESPACE_0"
-kubectl --context "$CLUSTER_1" apply -f nginx.yaml -n "$CAMUNDA_NAMESPACE_1"
-
+kubectl --context "$CLUSTER_0" apply -f nginx-submariner.yaml -n "$CAMUNDA_NAMESPACE_0"
+kubectl --context "$CLUSTER_1" apply -f nginx-submariner.yaml -n "$CAMUNDA_NAMESPACE_1"
 
 kubectl --context "$CLUSTER_0" wait --for=condition=Ready pod/sample-nginx -n "$CAMUNDA_NAMESPACE_0" --timeout=300s
 kubectl --context "$CLUSTER_1" wait --for=condition=Ready pod/sample-nginx -n "$CAMUNDA_NAMESPACE_1" --timeout=300s
 
-ping_instance "$CLUSTER_0" "$CAMUNDA_NAMESPACE_0" "$CAMUNDA_NAMESPACE_1"
-ping_instance "$CLUSTER_1" "$CAMUNDA_NAMESPACE_1" "$CAMUNDA_NAMESPACE_0"
 
-kubectl --context "$CLUSTER_0" delete -f nginx.yaml -n "$CAMUNDA_NAMESPACE_0"
-kubectl --context "$CLUSTER_1" delete -f nginx.yaml -n "$CAMUNDA_NAMESPACE_1"
+kubectl --context "$CLUSTER_0"  apply -f debug.yml
+kubectl --context "$CLUSTER_1"  apply -f debug.yml
+
+kubectl --context "$CLUSTER_0" wait --for=condition=Ready pod/ubuntu-with-nmap -n "default" --timeout=300s
+kubectl --context "$CLUSTER_1" wait --for=condition=Ready pod/ubuntu-with-nmap -n "default" --timeout=300s
+
+ping_instance "$CLUSTER_0" "$CAMUNDA_NAMESPACE_0" "$CAMUNDA_NAMESPACE_1" "$CLUSTER_1"
+ping_instance "$CLUSTER_1" "$CAMUNDA_NAMESPACE_1" "$CAMUNDA_NAMESPACE_0" local-cluster
+
+echo "Cleaning up pods..."
+
+kubectl --context "$CLUSTER_0"  delete -f debug.yml
+kubectl --context "$CLUSTER_1"  delete -f debug.yml
+
+kubectl --context "$CLUSTER_0" delete -f nginx-submariner.yaml -n "$CAMUNDA_NAMESPACE_0"
+kubectl --context "$CLUSTER_1" delete -f nginx-submariner.yaml -n "$CAMUNDA_NAMESPACE_1"

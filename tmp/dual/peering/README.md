@@ -18,7 +18,11 @@ No modules.
 | [aws_vpc_security_group_ingress_rule.owner_eks_primary](https://registry.terraform.io/providers/hashicorp/aws/5.51.1/docs/resources/vpc_security_group_ingress_rule) | resource |
 ## Inputs
 
-No inputs.
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_accepter"></a> [accepter](#input\_accepter) | Information for the accepter VPC | <pre>object({<br>    region                  = string<br>    vpc_cidr_block          = string<br>    vpc_id                  = string<br>    security_group_id       = string<br>    public_route_table_id   = string<br>    private_route_table_ids = set(string)<br>  })</pre> | n/a | yes |
+| <a name="input_cluster_set_name"></a> [cluster\_set\_name](#input\_cluster\_set\_name) | Name of the cluster set | `string` | `"cl-oc"` | no |
+| <a name="input_owner"></a> [owner](#input\_owner) | Information for the owner VPC | <pre>object({<br>    region                  = string<br>    vpc_cidr_block          = string<br>    vpc_id                  = string<br>    security_group_id       = string<br>    public_route_table_id   = string<br>    private_route_table_ids = set(string)<br>  })</pre> | n/a | yes |
 ## Outputs
 
 No outputs.
