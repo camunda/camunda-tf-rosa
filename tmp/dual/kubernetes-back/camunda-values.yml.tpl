@@ -48,10 +48,17 @@ connectors:
   enabled: false
 
 zeebe:
-  clusterSize: 8
-  partitionCount: 8
-  replicationFactor: 4
+  clusterSize: 4
+  partitionCount: 3
+  replicationFactor: 2
   pvcSize: 1Gi
+
+  readinessProbe:
+    enabled: false # todo: revert
+    scheme: HTTP
+  livenessProbe:
+    enabled: false # todo: revert
+    scheme: HTTP
 
   resources:
     requests:
@@ -73,14 +80,6 @@ zeebe-gateway:
       memory: "1Gi"
 
   logLevel: ERROR
-
-  env:
-  - name: ZEEBE_GATEWAY_CLUSTER_MESSAGECOMPRESSION
-    value: "GZIP"
-  - name: ZEEBE_GATEWAY_CLUSTER_MEMBERSHIP_PROBETIMEOUT
-    value: "500ms"
-  - name: ZEEBE_GATEWAY_CLUSTER_MEMBERSHIP_PROBEINTERVAL
-    value: "2s"
 
 elasticsearch:
   enabled: true
@@ -105,7 +104,6 @@ elasticsearch:
       # Add S3 client camunda keys to the keystore
       echo "${DOLLAR}S3_SECRET_KEY" | elasticsearch-keystore add -x s3.client.camunda.secret_key
       echo "${DOLLAR}S3_ACCESS_KEY" | elasticsearch-keystore add -x s3.client.camunda.access_key
-
   extraEnvVarsSecret: elasticsearch-env-secret
   # Bitnami chart fix to allow adding keystore secrets
   extraVolumeMounts:

@@ -16,6 +16,9 @@ Before you start, ensure you have the following tools installed:
 
 ## Step-by-Step Instructions
 
+
+TODO: update cluster creation steps and submariner based on submariner.fish
+
 ### 1. Define Environment Variables
 
 Set up the environment variables for both regions and clusters:
@@ -117,38 +120,18 @@ kubectl config rename-context $(oc config current-context) "$CLUSTER_1"
 kubectl config use "$CLUSTER_1"
 ```
 
-### 6. Configure Ingress
+### 7. Install OpenShift ACM and Submariner
 
-Set up the ingress configuration:
+TODO: document
 
-```bash
-cd tmp/dual
-
-# Cluster 0 Ingress Configuration
-export CLUSTER_0_BASE_DOMAIN=$(rosa list cluster --output json | jq -r ".[] | select(.name == \"$CLUSTER_0\") | .dns.base_domain")
-export CLUSTER_0_DOMAIN_PREFIX=$(rosa list cluster --output json | jq -r ".[] | select(.name == \"$CLUSTER_0\") | .domain_prefix")
-export CLUSTER_0_DOMAIN="rosa.$CLUSTER_0_DOMAIN_PREFIX.$CLUSTER_0_BASE_DOMAIN"
-export CLUSTER_0_APPS_DOMAIN=$(kubectl --context $CLUSTER_0 get IngressController default -n openshift-ingress-operator -o jsonpath='{.spec.domain}')
-
-# Cluster 1 Ingress Configuration
-export CLUSTER_1_BASE_DOMAIN=$(rosa list cluster --output json | jq -r ".[] | select(.name == \"$CLUSTER_1\") | .dns.base_domain")
-export CLUSTER_1_DOMAIN_PREFIX=$(rosa list cluster --output json | jq -r ".[] | select(.name == \"$CLUSTER_1\") | .domain_prefix")
-export CLUSTER_1_DOMAIN="rosa.$CLUSTER_1_DOMAIN_PREFIX.$CLUSTER_1_BASE_DOMAIN"
-export CLUSTER_1_APPS_DOMAIN=$(kubectl --context $CLUSTER_1 get IngressController default -n openshift-ingress-operator -o jsonpath='{.spec.domain}')
-
-# Ensure namespaces exist
-kubectl --context $CLUSTER_0 get namespace "$CAMUNDA_NAMESPACE_0" || kubectl --context $CLUSTER_0 create namespace "$CAMUNDA_NAMESPACE_0"
-kubectl --context $CLUSTER_1 get namespace "$CAMUNDA_NAMESPACE_1" || kubectl --context $CLUSTER_1 create namespace "$CAMUNDA_NAMESPACE_1"
-```
-
-### 7. Setup S3 for Elasticsearch
+### 8. Setup S3 for Elasticsearch
 
 Set up S3 for Elasticsearch:
 
 ```bash
 cd s3-es
 export AWS_REGION="$REGION_0"
-terraform init
+terraform init  -backend-config="bucket=camunda-tf-rosa" -backend-config="key=tfstate-$CLUSTER_0-$CLUSTER_1-s3/bucket.tfstate" -backend-config="region=eu-west-2"
 terraform plan -out "s3.plan" -var "cluster_name=$CLUSTER_0-$CLUSTER_1"
 terraform apply "s3.plan"
 
@@ -164,267 +147,37 @@ unset AWS_ACCESS_KEY_ES
 unset AWS_SECRET_ACCESS_KEY_ES
 ```
 
-### 8. Configure OpenShift Federation Service Mesh
-
-
-/!\ THIS SECTION IS WORK IN PROGRESS
-
-Set up the OpenShift Federation Service Mesh between the two clusters:
-
-#### 8.1 Install Service Mesh Operators
-
-Follow instructions at https://docs.openshift.com/container-platform/4.16/service_mesh/v2x/installing-ossm.html#ossm-install-ossm-operator_installing-ossm.
-Install grafana and jaeger.
-
-#### 8.2 Create Service Mesh Control Planes
-
-Create the Service Mesh Control Planes in both clusters:
-
-```bash
-# Cluster 0 Service Mesh Control Plane
-cat <<EOF | kubectl --context $CLUSTER_0 apply -f -
-apiVersion: maistra.io/v1
-kind: ServiceMeshControlPlane
-metadata:
-  name: basic
-  namespace: istio-system
-spec:
-  version: v2.1
-  tracing:
-    type: Jaeger
-  addons:
-    grafana:
-      enabled: true
-EOF
-
-# Cluster 1 Service Mesh Control Plane
-cat <<EOF | kubectl --context $CLUSTER_1 apply -f -
-apiVersion: maistra.io/v1
-kind: ServiceMeshControlPlane
-metadata:
-  name: basic
-  namespace: istio-system
-spec:
-  version: v2.1
-  tracing:
-    type: Jaeger
-  addons:
-    grafana:
-      enabled: true
-EOF
-```
-
-#### 8.3 Create Service Mesh Member Rolls
-
-Create the Service Mesh Member Rolls in both clusters:
-
-```bash
-# Cluster 0 Service Mesh Member Roll
-cat <<EOF | kubectl --context $CLUSTER_0 apply -f -
-apiVersion: maistra.io/v1
-kind: ServiceMeshMemberRoll
-metadata:
-  name: default
-  namespace: istio-system
-spec:
-  members:
-    - $CAMUNDA_NAMESPACE_0
-EOF
-
-# Cluster 1 Service Mesh Member Roll
-cat <<EOF | kubectl --context $CLUSTER_1 apply -f -
-apiVersion: maistra.io/v1
-kind: ServiceMeshMemberRoll
-metadata:
-  name: default
-  namespace: istio-system
-spec:
-  members:
-    - $CAMUNDA_NAMESPACE_1
-EOF
-```
-
-#### 8.4 Configure Federation
-
-Enable federation between the two clusters:
-
-```bash
-# Cluster 0 Federation Configuration
-cat <<EOF | kubectl --context $CLUSTER_0 apply -f -
-apiVersion: networking.istio.io/v1alpha3
-kind: ServiceEntry
-metadata:
-  name: external-service
-  namespace: istio-system
-spec:
-  hosts:
-  - "*.apps.$CLUSTER_1_APPS_DOMAIN"
-  ports:
-  - number: 80
-    name: http
-    protocol: HTTP
-  - number: 443
-    name: https
-    protocol: HTTPS
-  resolution: DNS
-EOF
-
-# Cluster 1 Federation Configuration
-cat <<EOF | kubectl --context $CLUSTER_1 apply -f -
-apiVersion: networking.istio.io/v1alpha3
-kind: ServiceEntry
-metadata:
-  name: external-service
-  namespace: istio-system
-spec:
-  hosts:
-  - "*.apps.$CLUSTER_0_APPS_DOMAIN"
-  ports:
-  - number: 80
-    name: http
-    protocol: HTTP
-  - number: 443
-    name: https
-    protocol: HTTPS
-  resolution: DNS
-EOF
-```
-
-#### 8.5 Cross cluster service resolution
-
-##### 1. Create Service Entries
-
-Create Service Entries in each cluster to allow them to recognize the services in the other cluster.
-
-```bash
-# Define application service names
-export SERVICE_NAME="your-service-name"
-```
-
-###### Cluster 0 Configuration
-
-```bash
-# Define the hostnames and ports for the service in Cluster 1
-cat <<EOF | kubectl --context $CLUSTER_0_CONTEXT apply -f -
-apiVersion: networking.istio.io/v1alpha3
-kind: ServiceEntry
-metadata:
-  name: service-entry-cluster-1
-  namespace: $CLUSTER_0_NAMESPACE
-spec:
-  hosts:
-  - "$SERVICE_NAME.$CLUSTER_1_NAMESPACE.svc.cluster.local"
-  ports:
-  - number: 80
-    name: http
-    protocol: HTTP
-  resolution: DNS
-EOF
-```
-
-###### Cluster 1 Configuration
-
-```bash
-# Define the hostnames and ports for the service in Cluster 0
-cat <<EOF | kubectl --context $CLUSTER_1_CONTEXT apply -f -
-apiVersion: networking.istio.io/v1alpha3
-kind: ServiceEntry
-metadata:
-  name: service-entry-cluster-0
-  namespace: $CLUSTER_1_NAMESPACE
-spec:
-  hosts:
-  - "$SERVICE_NAME.$CLUSTER_0_NAMESPACE.svc.cluster.local"
-  ports:
-  - number: 80
-    name: http
-    protocol: HTTP
-  resolution: DNS
-EOF
-```
-
-##### 3. Create Destination Rules
-
-Configure destination rules to ensure proper routing and load balancing.
-
-###### Cluster 0 Configuration
-
-```bash
-cat <<EOF | kubectl --context $CLUSTER_0_CONTEXT apply -f -
-apiVersion: networking.istio.io/v1alpha3
-kind: DestinationRule
-metadata:
-  name: destination-rule-cluster-1
-  namespace: $CLUSTER_0_NAMESPACE
-spec:
-  host: "$SERVICE_NAME.$CLUSTER_1_NAMESPACE.svc.cluster.local"
-  trafficPolicy:
-    tls:
-      mode: ISTIO_MUTUAL
-EOF
-```
-
-###### Cluster 1 Configuration
-
-```bash
-cat <<EOF | kubectl --context $CLUSTER_1_CONTEXT apply -f -
-apiVersion: networking.istio.io/v1alpha3
-kind: DestinationRule
-metadata:
-  name: destination-rule-cluster-0
-  namespace: $CLUSTER_1_NAMESPACE
-spec:
-  host: "$SERVICE_NAME.$CLUSTER_0_NAMESPACE.svc.cluster.local"
-  trafficPolicy:
-    tls:
-      mode: ISTIO_MUTUAL
-EOF
-```
-
-##### 4. Verify the Configuration
-
-Ensure the services are correctly recognized and accessible across clusters. You can do this by deploying a test pod in one cluster and trying to access the service in the other cluster.
-Inside the test pod (you can deploy `dual/debug.yml`):
-
-```sh
-curl http://$SERVICE_NAME.$CLUSTER_1_NAMESPACE.svc.cluster.local
-```
-
 ### 9. Prepare for Deployment
 
 Prepare the clusters for Camunda deployment:
 
 ```bash
-# Set domains for Zeebe forwarder
-export CLUSTER_0_ZEEBE_FORWARDER_DOMAIN=$(echo $CLUSTER_0_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN | sed 's/^\*\.//')
-export CLUSTER_1_ZEEBE_FORWARDER_DOMAIN=$(echo $CLUSTER_1_ZEEBE_PTP_INGRESS_WILDCARD_DOMAIN | sed 's/^\*\.//')
+export REGION_0_ZEEBE_SERVICE_NAME=$(echo "local-cluster.${HELM_RELEASE_NAME}-zeebe.${CAMUNDA_NAMESPACE_0}.svc.clusterset.local")
+export REGION_1_ZEEBE_SERVICE_NAME=$(echo "${CLUSTER_1}.${HELM_RELEASE_NAME}-zeebe.${CAMUNDA_NAMESPACE_1}.svc.clusterset.local")
 
-export CLUSTER_0_ES_INGRESS_DOMAIN="elastic.$CLUSTER_0_APPS_DOMAIN"
-export CLUSTER_1_ES_INGRESS_DOMAIN="elastic.$CLUSTER
+# Not yet used
+export REGION_0_INGRESS_BASE_DOMAIN=$(kubectl --context $CLUSTER_0 get IngressController default -n openshift-ingress-operator -o jsonpath='{.spec.domain}')
+export REGION_1_INGRESS_BASE_DOMAIN=$(kubectl --context $CLUSTER_1 get IngressController default -n openshift-ingress-operator -o jsonpath='{.spec.domain}')
 
-_1_APPS_DOMAIN"
-
-./generate_zeebe_helm_values.sh
+python generate_zeebe_values_submariner.py
 
 # Set the output values
 export ZEEBE_BROKER_CLUSTER_INITIALCONTACTPOINTS="fill"
 export ZEEBE_BROKER_EXPORTERS_ELASTICSEARCHREGION0_ARGS_URL="fill"
 export ZEEBE_BROKER_EXPORTERS_ELASTICSEARCHREGION1_ARGS_URL="fill"
 
+rm -Rf "/tmp/camunda-platform-$HELM_CHART_VERSION"
+helm pull camunda/camunda-platform --version "$HELM_CHART_VERSION" --untar --untardir "/tmp/camunda-platform-$HELM_CHART_VERSION"
+tree "/tmp/camunda-platform-$HELM_CHART_VERSION"
+
+
 # Generate the values from the templates
 export DOLLAR="\$"
 envsubst < kubernetes/camunda-values.yml.tpl > kubernetes/camunda-values.yml
 
 # Cluster 0
-INGRESS_BASE_DOMAIN="$CLUSTER_0_APPS_DOMAIN" \
-  ELASTIC_INGRESS_HOSTNAME="$CLUSTER_0_ES_INGRESS_DOMAIN" \
-  ZEEBE_FORWARDER_DOMAIN="$CLUSTER_0_ZEEBE_FORWARDER_DOMAIN" \
-  envsubst < kubernetes/region0/camunda-values-failover.yml.tpl > kubernetes/region0/camunda-values-failover.yml
-
-INGRESS_BASE_DOMAIN="$CLUSTER_0_APPS_DOMAIN" \
-  ELASTIC_INGRESS_HOSTNAME="$CLUSTER_0_ES_INGRESS_DOMAIN" \
-  ZEEBE_FORWARDER_DOMAIN="$CLUSTER_0_ZEEBE_FORWARDER_DOMAIN" \
-  envsubst < kubernetes/region0/camunda-values.yml.tpl > kubernetes/region0/camunda-values.yml
+envsubst < kubernetes/region0/camunda-values-failover.yml.tpl > kubernetes/region0/camunda-values-failover.yml
+envsubst < kubernetes/region0/camunda-values.yml.tpl > kubernetes/region0/camunda-values.yml
 
 helm install $HELM_RELEASE_NAME camunda/camunda-platform --skip-crds \
   --version $HELM_CHART_VERSION \
@@ -436,15 +189,9 @@ helm install $HELM_RELEASE_NAME camunda/camunda-platform --skip-crds \
   -f kubernetes/region0/camunda-values.yml
 
 # Cluster 1
-INGRESS_BASE_DOMAIN="$CLUSTER_1_APPS_DOMAIN" \
-  ELASTIC_INGRESS_HOSTNAME="$CLUSTER_1_ES_INGRESS_DOMAIN" \
-  ZEEBE_FORWARDER_DOMAIN="$CLUSTER_1_ZEEBE_FORWARDER_DOMAIN" \
-  envsubst < kubernetes/region1/camunda-values-failover.yml.tpl > kubernetes/region1/camunda-values-failover.yml
+envsubst < kubernetes/region1/camunda-values-failover.yml.tpl > kubernetes/region1/camunda-values-failover.yml
 
-INGRESS_BASE_DOMAIN="$CLUSTER_1_APPS_DOMAIN" \
-  ELASTIC_INGRESS_HOSTNAME="$CLUSTER_1_ES_INGRESS_DOMAIN" \
-  ZEEBE_FORWARDER_DOMAIN="$CLUSTER_1_ZEEBE_FORWARDER_DOMAIN" \
-  envsubst < kubernetes/region1/camunda-values.yml.tpl > kubernetes/region1/camunda-values.yml
+envsubst < kubernetes/region1/camunda-values.yml.tpl > kubernetes/region1/camunda-values.yml
 
 helm install $HELM_RELEASE_NAME camunda/camunda-platform --skip-crds \
   --version $HELM_CHART_VERSION \
@@ -454,6 +201,36 @@ helm install $HELM_RELEASE_NAME camunda/camunda-platform --skip-crds \
   --post-renderer bash --post-renderer-args "/tmp/camunda-platform-$HELM_CHART_VERSION/camunda-platform/openshift/patch.sh" \
   -f kubernetes/camunda-values.yml \
   -f kubernetes/region1/camunda-values.yml
+```
+
+#### Export the services using subctl
+
+In order to access the different services from each cluster, we need to export them:
+```bash
+
+echo "Exporting services from $CLUSTER_0 in $CAMUNDA_NAMESPACE_0 using subctl"
+
+for svc in $(kubectl --context "$CLUSTER_0" get svc -n "$CAMUNDA_NAMESPACE_0" -o jsonpath='{.items[*].metadata.name}'); do
+    subctl --context "$CLUSTER_0" export service --namespace $CAMUNDA_NAMESPACE_0 $svc
+done
+
+echo "Exporting services from $CLUSTER_1 in $CAMUNDA_NAMESPACE_1 using subctl"
+
+for svc in $(kubectl --context "$CLUSTER_1" get svc -n "$CAMUNDA_NAMESPACE_1" -o jsonpath='{.items[*].metadata.name}'); do
+    subctl --context "$CLUSTER_1" export service --namespace $CAMUNDA_NAMESPACE_1 $svc
+done
+
+```
+
+### Verify
+
+```bash
+kubectl --context "$CLUSTER_0" -n $CAMUNDA_NAMESPACE_0 port-forward services/$HELM_RELEASE_NAME-zeebe-gateway 26500:26500
+
+
+zbctl status --insecure --address localhost:26500
+
+# You should have 8 brokers
 ```
 
 ### Cleanup

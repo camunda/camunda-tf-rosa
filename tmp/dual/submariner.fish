@@ -294,3 +294,7 @@ kubectl --context $CLUSTER_1  apply -f debug.yml
 # In addition, the individual Pods can be accessed as web-0.cluster3.nginx-ss.nginx-test.svc.clusterset.local and web-1.cluster3.nginx-ss.nginx-test.svc.clusterset.local.
 
 # IV. Deploy C8
+
+see ### 7. Setup S3 for Elasticsearch in README.
+
+see ### 9. Prepare for Deployment
