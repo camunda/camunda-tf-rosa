@@ -47,12 +47,20 @@ kubectl --context "$CLUSTER_1" apply -f nginx-submariner.yaml -n "$CAMUNDA_NAMES
 kubectl --context "$CLUSTER_0" wait --for=condition=Ready pod/sample-nginx -n "$CAMUNDA_NAMESPACE_0" --timeout=300s
 kubectl --context "$CLUSTER_1" wait --for=condition=Ready pod/sample-nginx -n "$CAMUNDA_NAMESPACE_1" --timeout=300s
 
+kubectl --context "$CLUSTER_0" -n "$CAMUNDA_NAMESPACE_0" describe serviceexport
+kubectl --context "$CLUSTER_1" -n "$CAMUNDA_NAMESPACE_1" describe serviceexport
+
+kubectl --context "$CLUSTER_0" -n "$CAMUNDA_NAMESPACE_0" describe serviceimport
+kubectl --context "$CLUSTER_1" -n "$CAMUNDA_NAMESPACE_1" describe serviceimport
 
 kubectl --context "$CLUSTER_0"  apply -f debug.yml
 kubectl --context "$CLUSTER_1"  apply -f debug.yml
 
 kubectl --context "$CLUSTER_0" wait --for=condition=Ready pod/ubuntu-with-nmap -n "default" --timeout=300s
 kubectl --context "$CLUSTER_1" wait --for=condition=Ready pod/ubuntu-with-nmap -n "default" --timeout=300s
+
+echo "Sleeping 10s"
+sleep 10
 
 ping_instance "$CLUSTER_0" "$CAMUNDA_NAMESPACE_0" "$CAMUNDA_NAMESPACE_1" "$CLUSTER_1"
 ping_instance "$CLUSTER_1" "$CAMUNDA_NAMESPACE_1" "$CAMUNDA_NAMESPACE_0" local-cluster

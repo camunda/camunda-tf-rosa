@@ -1,3 +1,4 @@
+# This file defines a debug pod used to do some networking commands in OpenShift, it only works in the "default" namespace
 apiVersion: v1
 kind: Pod
 metadata:
