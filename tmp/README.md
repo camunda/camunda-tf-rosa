@@ -1,28 +1,27 @@
 # Creating Two OpenShift Clusters Across Two Regions and deploy C8
 
-This guide provides step-by-step instructions on creating two OpenShift clusters in two different AWS regions and configuring Camunda 8 on these clusters.
+This guide provides step-by-step instructions for creating two OpenShift clusters in different AWS regions and configuring Camunda 8 on these clusters.
 
-It relies on [OpenShift Advanced Cluster Management (ACM)](https://www.redhat.com/en/technologies/management/advanced-cluster-management) and [Submariner](https://submariner.io/).
+It utilizes [OpenShift Advanced Cluster Management (ACM)](https://www.redhat.com/en/technologies/management/advanced-cluster-management) and [Submariner](https://submariner.io/).
 
-The principle can be replicated on other flavours of OpenShift that supports submariner (Azure, GCP, etc) but has only been tested on ROSA HCP.
+The same approach can be applied to other OpenShift flavors that support Submariner (such as Azure, GCP, etc.), but it has only been tested on ROSA HCP.
 
-![](https://meatybytes.io/posts/openshift/ocp-features/multi-cluster/connectivity/submariner_hu3f3d03703861280d02732de1b37dcf8b_72389_1320x0_resize_box_3.png)
+![Submariner Multi-Cluster Connectivity](https://meatybytes.io/posts/openshift/ocp-features/multi-cluster/connectivity/submariner_hu3f3d03703861280d02732de1b37dcf8b_72389_1320x0_resize_box_3.png)
 
 ## Prerequisites
 
-Before you start, ensure you have the following tools installed:
+Before you start, make sure you have the following tools installed:
 
 - **AWS CLI**: To interact with AWS services.
-- **Terraform**: To provision and manage the infrastructure.
-- **rosa CLI**: Red Hat OpenShift Service on AWS CLI for managing OpenShift clusters.
+- **Terraform**: For provisioning and managing the infrastructure.
+- **ROSA CLI**: Red Hat OpenShift Service on AWS CLI, used for managing OpenShift clusters.
 - **kubectl**: To manage Kubernetes clusters.
 - **helm**: For managing Kubernetes applications.
 - **jq**: A lightweight and flexible command-line JSON processor.
 
-`just install-tooling` will install most of them except ROSA CLI which can be installed as described in https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html-single/rosa_cli/index#rosa-get-started-cli.
+You can use the command `just install-tooling` to install most of these tools, except for ROSA CLI. To install ROSA CLI, follow the instructions provided in the [ROSA CLI documentation](https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html-single/rosa_cli/index#rosa-get-started-cli).
 
 ## Step-by-Step Instructions
-
 
 ### 1. Define Environment Variables
 
@@ -114,8 +113,7 @@ export CLUSTER_1_API_URL=$(rosa list cluster --output json | jq ".[] | select(.n
 
 ### 5. Log In to Clusters
 
-Log in to both clusters: you should keep each cluster in a dedicated terminal for ease of use
-
+Log in to both clusters. It is recommended to keep each cluster in a dedicated terminal for ease of use:
 ```bash
 # Login to Cluster 0
 rosa grant user cluster-admin --cluster="$CLUSTER_0" --user=kubeadmin
@@ -132,9 +130,9 @@ kubectl config rename-context $(oc config current-context) "$CLUSTER_1"
 kubectl config use "$CLUSTER_1"
 ```
 
-### 6. Configure clusters peering
+### 6. Configure Clusters Peering
 
-This step is necessary to connect the two cluster on their dedicated VPC
+This step is necessary to connect the two clusters via their dedicated VPCs. Follow the instructions below to configure VPC peering between Cluster 0 and Cluster 1:
 
 ```bash
 # Cluster 0
@@ -195,7 +193,6 @@ ACCEPTER_JSON=$(jq -n \
     private_route_table_ids: $private_route_table_ids
   }')
 
-# Print JSON objects
 echo "Terraform Variables for Owner ($CLUSTER_0):"
 echo "$OWNER_JSON"
 
@@ -209,10 +206,9 @@ terraform plan -out peering.plan \
 
 terraform apply "peering.plan"
 ```
-
 If you want to destroy it:
-```bash
 
+```bash
 # terraform destroy \
 #   -var "owner=$(echo "$OWNER_JSON" | jq -c .)" \
 #   -var "accepter=$(echo "$ACCEPTER_JSON" | jq -c .)"
@@ -220,14 +216,13 @@ If you want to destroy it:
 
 ### 7. Install OpenShift ACM and Submariner
 
-This part has been successfuly done using the UI, however, it should also works using the manifests.
+This part has been successfully completed using the UI, but it should also work using the manifests.
 
-It has been adapted from https://rcarrata.com/rosa/rosa-submariner/.
-In this setup, we use only 2 OpenShift clusters and one (the CLUSTER_0) will be referenced as `local-cluster`. This cannot be changed.
+The installation process is adapted from [this guide](https://rcarrata.com/rosa/rosa-submariner/). In this setup, we use only two OpenShift clusters, with one (Cluster 0) referenced as `local-cluster`. This designation cannot be changed.
 
-For a production installation, it is recommanded to follow the official Red Hat documentation: https://docs.redhat.com/en/documentation/red_hat_advanced_cluster_management_for_kubernetes/2.1/html/install/installing
+For a production installation, it is recommended to follow the official Red Hat documentation: [Installing Advanced Cluster Management](https://docs.redhat.com/en/documentation/red_hat_advanced_cluster_management_for_kubernetes/2.1/html/install/installing).
 
-The cluster 0 is refferenced as the Controller Cluster and therefore handles all management resources such as ACM or submariner.
+Cluster 0 is referenced as the Controller Cluster and handles all management resources, such as ACM and Submariner.
 
 ```bash
 cd tmp/dual
@@ -273,11 +268,12 @@ kubectl --context "$CLUSTER_0" get managedclusters
 # cl-oc-2         true           https://api.cl-oc-2.5egh.p3.openshiftapps.com:443    True     True        50s
 # local-cluster   true           https://api.cl-oc-1b.f70c.p3.openshiftapps.com:443   True     True        36m
 ```
-### 8. Install submariner in the clusters
 
-#### Create the broker nodes
+### 8. Install Submariner in the Clusters
 
-Submariner needs a dedicated broker node, we will create one in each cluster using rosa cli (we could also use the tf module later):
+#### Create the Broker Nodes
+
+Submariner requires a dedicated broker node in each cluster. We will create one in each cluster using the rosa CLI. Alternatively, you could use the Terraform module for this setup later.
 
 ```bash
 rosa create machinepool --cluster $CLUSTER_0 --name=sm-gw-mp --replicas=1 --labels='submariner.io/gateway=true' # todo: ideally, deploy accross regions
@@ -292,18 +288,18 @@ kubectl --context $CLUSTER_0 get nodes --show-labels --watch | grep submariner
 kubectl --context $CLUSTER_1 get nodes --show-labels --watch | grep submariner
 ```
 
-#### Install submariner addon
+#### Install Submariner Addon
 
-Install the `subctl` CLI:
+To install Submariner, start by setting up the `subctl` CLI:
+
 ```bash
-# https://submariner.io/operations/deployment/subctl/
+# Install subctl
 curl -Ls https://get.submariner.io | bash
 export PATH=$PATH:~/.local/bin
 echo export PATH=\$PATH:~/.local/bin >> ~/.profile
 ```
 
-This step has been done using the UI but can be done using manifests.
-UI tutorial is available at: https://rcarrata.com/rosa/rosa-submariner/
+The installation of Submariner can be performed through the UI, but you can also use manifests for this purpose. For a UI tutorial, visit: [Submariner Installation Guide](https://rcarrata.com/rosa/rosa-submariner/).
 
 ```bash
 envsubst < submariner/submariner-addon.yml.tpl | kubectl --context "$CLUSTER_0" apply -f -
@@ -388,19 +384,24 @@ subctl show all
 # submariner-lighthouse-coredns   registry.redhat.io/rhacm2   aa49dcea83fc3057c4da55ee72b599f8dc0e0127d033dc7bd223b6d617ebf30c   v0.18.0   amd64
 ```
 
-#### Test the inter-cluster communication
+#### Test the Inter-Cluster Communication
 
-To test inter-cluster communication, we deploy a simple http service on each cluster and a debug pod, then we try to reach each service from the other cluster.
+To verify inter-cluster communication, deploy a simple HTTP service and a debug pod on each cluster, then test connectivity between the clusters. This process has been automated in the `test_dns_chaining.sh` script.
 
-All those steps have been automated in a script.
+Run the following command to execute the test:
 
 ```bash
 ./test_dns_chaining.sh
 ```
 
-The script will setup the test setup, then describe the deployment and try to reach each cluster from the other.
+The script will:
 
-Once this script successfully completed, you have achieved the infrastructure configuration of the inter-cluster communication!
+1. Set up the test environment.
+2. Deploy the HTTP services and debug pods.
+3. Describe the deployments.
+4. Attempt to reach each service from the other cluster.
+
+Upon successful completion of this script, the inter-cluster communication infrastructure will be properly configured!
 
 ### 8. Setup S3 for Elasticsearch for C8 multi-region
 
@@ -485,7 +486,7 @@ You have now installed C8 in each region. Now we need to configure inter-cluster
 
 #### Export the services using subctl
 
-In order to access the different services from each cluster, we need to export them:
+To enable inter-cluster service communication, you need to export the services from each cluster. This allows services in one cluster to be accessed from the other cluster.
 ```bash
 echo "Exporting services from $CLUSTER_0 in $CAMUNDA_NAMESPACE_0 using subctl"
 
@@ -501,7 +502,7 @@ done
 
 ```
 
-When the service are exported, you may need to wait some time before all the C8 components are up and ready.
+When services are exported, you may need to wait some time before all the C8 components are up and ready.
 
 ### 10. Verify the inter-cluster zeebe status
 
