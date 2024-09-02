@@ -38,15 +38,25 @@ jobs:
         rm -f rosa-linux.tar.gz
         rosa version
         rosa login --token=${{ steps.secrets.outputs.RH_OPENSHIFT_TOKEN }}
-        rosa list versions --output json | jq '.[].raw_id' --raw-output > rosa_versions.txt
+        mkdir docs
+        rosa list versions --output json | jq '.[].raw_id' --raw-output > docs/rosa_versions.txt
 
     - name: Commit and push ROSA versions file to gh-pages
       shell: bash
       run: |
         git config --local user.name "github-actions[bot]"
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git add rosa_versions.txt
+        git add docs/rosa_versions.txt
         git commit -m "Update ROSA versions"
         git push origin :gh-pages
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Utilise le token GitHub pour authentifier
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Notify in Slack in case of failure
+      id: slack-notification
+      if: failure() && github.event_name == 'schedule'
+      uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@7d850d8f29a0d1ec0c7d47e56ded357992c4bd71 # main
+      with:
+        vault_addr: ${{ secrets.VAULT_ADDR }}
+        vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
+        vault_secret_id: ${{ secrets.VAULT_SECRET_ID }}
