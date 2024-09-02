@@ -16,6 +16,18 @@ jobs:
     steps:
     - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
 
+    - name: Import Secrets
+      id: secrets
+      uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3
+      with:
+        url: ${{ secrets.VAULT_ADDR }}
+        method: approle
+        roleId: ${{ secrets.VAULT_ROLE_ID }}
+        secretId: ${{ secrets.VAULT_SECRET_ID }}
+        exportEnv: false
+        secrets: |
+          secret/data/products/infrastructure-experience/ci/common RH_OPENSHIFT_TOKEN;
+
     - name: Install ROSA CLI and output rosa versions
       shell: bash
       run: |
@@ -25,6 +37,7 @@ jobs:
         chmod +x /usr/local/bin/rosa
         rm -f rosa-linux.tar.gz
         rosa version
+        rosa login --token=${{ steps.secrets.outputs.RH_OPENSHIFT_TOKEN }}
         rosa list versions --output json | jq '.[].raw_id' --raw-output > rosa_versions.txt
 
     - name: Upload ROSA versions artifact
