@@ -46,11 +46,13 @@ jobs:
     - name: Commit and push ROSA versions file to gh-pages
       shell: bash
       run: |
-        git config --local user.name "github-actions[bot]"
-        git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git add docs/rosa_versions.txt
-        git commit -m "Update ROSA versions"
-        git push origin gh-pages
+        git diff --exit-code docs/rosa_versions.txt || {
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/rosa_versions.txt
+          git commit -m "Update ROSA versions"
+          git push origin gh-pages
+        }
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
