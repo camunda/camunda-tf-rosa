@@ -1,4 +1,4 @@
-# This workflow updates an artifact containing the ROSA versions, it's used by renovate
+# This workflow updates an artifact containing the ROSA versions, it's used by renovate and published at https://camunda.github.io/camunda-tf-rosa/rosa_versions.txt
 name: Save ROSA Versions as an artifact
 
 on:
@@ -14,53 +14,53 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
-      with:
-        ref: "gh-pages"
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+        with:
+          ref: "gh-pages"
 
-    - name: Import Secrets
-      id: secrets
-      uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3
-      with:
-        url: ${{ secrets.VAULT_ADDR }}
-        method: approle
-        roleId: ${{ secrets.VAULT_ROLE_ID }}
-        secretId: ${{ secrets.VAULT_SECRET_ID }}
-        exportEnv: false
-        secrets: |
-          secret/data/products/infrastructure-experience/ci/common RH_OPENSHIFT_TOKEN;
+      - name: Import Secrets
+        id: secrets
+        uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          exportEnv: false
+          secrets: |
+            secret/data/products/infrastructure-experience/ci/common RH_OPENSHIFT_TOKEN;
 
-    - name: Install ROSA CLI and output rosa versions
-      shell: bash
-      run: |
-        curl -LO "https://mirror.openshift.com/pub/openshift-v4/clients/rosa/latest/rosa-linux.tar.gz"
-        tar -xvf rosa-linux.tar.gz
-        sudo mv rosa /usr/local/bin/rosa
-        chmod +x /usr/local/bin/rosa
-        rm -f rosa-linux.tar.gz
-        rosa version
-        rosa login --token=${{ steps.secrets.outputs.RH_OPENSHIFT_TOKEN }}
-        mkdir -p docs
-        rosa list versions --output json | jq '.[].raw_id' --raw-output > docs/rosa_versions.txt
+      - name: Install ROSA CLI and output rosa versions
+        shell: bash
+        run: |
+          curl -LO "https://mirror.openshift.com/pub/openshift-v4/clients/rosa/latest/rosa-linux.tar.gz"
+          tar -xvf rosa-linux.tar.gz
+          sudo mv rosa /usr/local/bin/rosa
+          chmod +x /usr/local/bin/rosa
+          rm -f rosa-linux.tar.gz
+          rosa version
+          rosa login --token=${{ steps.secrets.outputs.RH_OPENSHIFT_TOKEN }}
+          mkdir -p docs
+          rosa list versions --output json | jq '.[].raw_id' --raw-output > docs/rosa_versions.txt
 
-    - name: Commit and push ROSA versions file to gh-pages
-      shell: bash
-      run: |
-        git diff --exit-code docs/rosa_versions.txt || {
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/rosa_versions.txt
-          git commit -m "Update ROSA versions"
-          git push origin gh-pages
-        }
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Commit and push ROSA versions file to gh-pages
+        shell: bash
+        run: |
+          git diff --exit-code docs/rosa_versions.txt || {
+            git config --local user.name "github-actions[bot]"
+            git config --local user.email "github-actions[bot]@users.noreply.github.com"
+            git add docs/rosa_versions.txt
+            git commit -m "Update ROSA versions"
+            git push origin gh-pages
+          }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Notify in Slack in case of failure
-      id: slack-notification
-      if: failure() && github.event_name == 'schedule'
-      uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@7d850d8f29a0d1ec0c7d47e56ded357992c4bd71 # main
-      with:
-        vault_addr: ${{ secrets.VAULT_ADDR }}
-        vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
-        vault_secret_id: ${{ secrets.VAULT_SECRET_ID }}
+      - name: Notify in Slack in case of failure
+        id: slack-notification
+        if: failure() && github.event_name == 'schedule'
+        uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@a00d01c8e3225dd7738e864bf9d23deff00004c0 # main
+        with:
+          vault_addr: ${{ secrets.VAULT_ADDR }}
+          vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
+          vault_secret_id: ${{ secrets.VAULT_SECRET_ID }}
