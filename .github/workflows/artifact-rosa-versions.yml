@@ -40,8 +40,13 @@ jobs:
         rosa login --token=${{ steps.secrets.outputs.RH_OPENSHIFT_TOKEN }}
         rosa list versions --output json | jq '.[].raw_id' --raw-output > rosa_versions.txt
 
-    - name: Upload ROSA versions artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: rosa-versions
-        path: rosa_versions.txt
+    - name: Commit and push ROSA versions file to gh-pages
+      shell: bash
+      run: |
+        git config --local user.name "github-actions[bot]"
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git add rosa_versions.txt
+        git commit -m "Update ROSA versions"
+        git push origin :gh-pages
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Utilise le token GitHub pour authentifier
