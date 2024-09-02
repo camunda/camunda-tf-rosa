@@ -40,7 +40,7 @@ jobs:
         rm -f rosa-linux.tar.gz
         rosa version
         rosa login --token=${{ steps.secrets.outputs.RH_OPENSHIFT_TOKEN }}
-        mkdir docs
+        mkdir -p docs
         rosa list versions --output json | jq '.[].raw_id' --raw-output > docs/rosa_versions.txt
 
     - name: Commit and push ROSA versions file to gh-pages
