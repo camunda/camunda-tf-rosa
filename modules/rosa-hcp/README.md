@@ -1,13 +1,13 @@
 # rosa-hcp
 
-<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- BEGIN_TF_DOCS -->
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_htpasswd_idp"></a> [htpasswd\_idp](#module\_htpasswd\_idp) | terraform-redhat/rosa-hcp/rhcs//modules/idp | 1.6.2 |
-| <a name="module_rosa_hcp"></a> [rosa\_hcp](#module\_rosa\_hcp) | terraform-redhat/rosa-hcp/rhcs | 1.6.2 |
-| <a name="module_vpc"></a> [vpc](#module\_vpc) | terraform-redhat/rosa-hcp/rhcs//modules/vpc | 1.6.2 |
+| <a name="module_htpasswd_idp"></a> [htpasswd\_idp](#module\_htpasswd\_idp) | terraform-redhat/rosa-hcp/rhcs//modules/idp | 1.6.3 |
+| <a name="module_rosa_hcp"></a> [rosa\_hcp](#module\_rosa\_hcp) | terraform-redhat/rosa-hcp/rhcs | 1.6.3 |
+| <a name="module_vpc"></a> [vpc](#module\_vpc) | terraform-redhat/rosa-hcp/rhcs//modules/vpc | 1.6.3 |
 ## Resources
 
 | Name | Type |
@@ -39,4 +39,4 @@
 | <a name="output_cluster_id"></a> [cluster\_id](#output\_cluster\_id) | n/a |
 | <a name="output_private_subnet_ids"></a> [private\_subnet\_ids](#output\_private\_subnet\_ids) | n/a |
 | <a name="output_public_subnet_ids"></a> [public\_subnet\_ids](#output\_public\_subnet\_ids) | n/a |
-<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- END_TF_DOCS -->
