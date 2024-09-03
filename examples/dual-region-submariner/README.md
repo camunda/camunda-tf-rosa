@@ -1,5 +1,7 @@
 # Creating Two OpenShift Clusters Across Two Regions and deploy C8
 
+**⚠️ Note:** This guide currently has no production support and is intended as a proof of concept for testing purposes only.
+
 This guide provides step-by-step instructions for creating two OpenShift clusters in different AWS regions and configuring Camunda 8 on these clusters.
 
 It utilizes [OpenShift Advanced Cluster Management (ACM)](https://www.redhat.com/en/technologies/management/advanced-cluster-management) and [Submariner](https://submariner.io/).
@@ -33,8 +35,12 @@ export REGION_0=eu-central-1
 export REGION_1=eu-west-1
 
 # Define the cluster names
-export CLUSTER_0=cl-oc-1b
+export CLUSTER_0=cl-oc-1
 export CLUSTER_1=cl-oc-2
+
+# Important Note:
+# Ensure that the CIDR blocks for each cluster do not overlap.
+# Each cluster must have distinct IP address ranges to avoid conflicts.
 
 # Define the CIDR blocks for cluster 0
 export CLUSTER_0_VPC_CIDR="10.0.0.0/16"
@@ -57,6 +63,8 @@ export CAMUNDA_NAMESPACE_1_FAILOVER="$CAMUNDA_NAMESPACE_1-failover"
 # Define the Helm release name and chart version
 export HELM_RELEASE_NAME=camunda
 export HELM_CHART_VERSION=10.1.1
+
+# Define where you want to store your state
 export TF_STATE_BUCKET_NAME=camunda-tf-rosa
 export TF_STATE_BUCKET_REGION=eu-west-2
 ```
@@ -66,7 +74,7 @@ export TF_STATE_BUCKET_REGION=eu-west-2
 Navigate to the directory for cluster 0 setup and initialize Terraform:
 
 ```bash
-cd tmp/rosa-hcp-eu-central-1b
+cd rosa-hcp-eu-central-1
 export AWS_REGION="$REGION_0"
 export RH_TOKEN="yourToken" # you can get it from https://console.redhat.com/openshift/token
 export KUBEADMIN_PASSWORD="yourPassword" # define a password of your choice
@@ -85,7 +93,7 @@ terraform apply "rosa.plan"
 Navigate to the directory for cluster 1 setup and initialize Terraform:
 
 ```bash
-cd tmp/rosa-hcp-eu-west-1
+cd rosa-hcp-eu-west-1
 export AWS_REGION="$REGION_1"
 export RH_TOKEN="yourToken" # you can get it from https://console.redhat.com/openshift/token
 export KUBEADMIN_PASSWORD="yourPassword" # define a password of your choice
@@ -225,7 +233,7 @@ For a production installation, it is recommended to follow the official Red Hat 
 Cluster 0 is referenced as the Controller Cluster and handles all management resources, such as ACM and Submariner.
 
 ```bash
-cd tmp/dual
+cd dual
 
 kubectl --context $CLUSTER_0 apply -f acm/acm-ns.yml
 kubectl --context $CLUSTER_0 apply -f acm/operatorgroup.yml
@@ -266,7 +274,7 @@ CLUSTER_NAME="$CLUSTER_1" envsubst < submariner/klusterlet-config.yml.tpl | kube
 kubectl --context "$CLUSTER_0" get managedclusters
 # NAME            HUB ACCEPTED   MANAGED CLUSTER URLS                                 JOINED   AVAILABLE   AGE
 # cl-oc-2         true           https://api.cl-oc-2.5egh.p3.openshiftapps.com:443    True     True        50s
-# local-cluster   true           https://api.cl-oc-1b.f70c.p3.openshiftapps.com:443   True     True        36m
+# local-cluster   true           https://api.cl-oc-1.f70c.p3.openshiftapps.com:443   True     True        36m
 ```
 
 ### 8. Install Submariner in the Clusters
@@ -348,7 +356,7 @@ subctl show all
 # submariner-lighthouse-coredns   registry.redhat.io/rhacm2   aa49dcea83fc3057c4da55ee72b599f8dc0e0127d033dc7bd223b6d617ebf30c   v0.18.0   amd64
 
 
-# Cluster "api-cl-oc-1b-ckhb-p3-openshiftapps-com:443"
+# Cluster "api-cl-oc-1-ckhb-p3-openshiftapps-com:443"
 #  ✓ Detecting broker(s)
 # NAMESPACE              NAME                COMPONENTS   GLOBALNET   GLOBALNET CIDR   DEFAULT GLOBALNET SIZE   DEFAULT DOMAINS
 # rosa-clusters-broker   submariner-broker                no                           0

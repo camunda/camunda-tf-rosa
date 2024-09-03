@@ -1,1 +1,0 @@
-../../modules/rosa-hcp/rosa.tf
