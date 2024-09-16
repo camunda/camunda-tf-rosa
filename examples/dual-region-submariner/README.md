@@ -25,7 +25,7 @@ You can use the command `just install-tooling` to install most of these tools, e
 
 ## Step-by-Step Instructions
 
-### 1. Define Environment Variables
+### 0. Define Environment Variables
 
 Set up the environment variables for both regions and clusters:
 
@@ -68,6 +68,30 @@ export HELM_CHART_VERSION=10.1.1
 export TF_STATE_BUCKET_NAME=camunda-tf-rosa
 export TF_STATE_BUCKET_REGION=eu-west-2
 ```
+
+### 1. Create a Bucket for Storing Terraform State (Optional)
+
+Before setting up the clusters, it is recommended to use an S3 bucket to store the Terraform state files. If the bucket does not already exist, you can create one using the following steps:
+
+1. Create an S3 bucket in your desired AWS region:
+
+   ```bash
+   aws s3api create-bucket \
+     --bucket $TF_STATE_BUCKET_NAME \
+     --region $TF_STATE_BUCKET_REGION \
+     --create-bucket-configuration LocationConstraint=$TF_STATE_BUCKET_REGION
+   ```
+
+2. Enable versioning on the bucket (recommended for state management):
+
+   ```bash
+   aws s3api put-bucket-versioning \
+     --bucket $TF_STATE_BUCKET_NAME \
+     --versioning-configuration Status=Enabled
+   ```
+
+Once the bucket is set up, you can configure Terraform to use it for storing the state files.
+
 
 ### 2. Set Up Cluster 0
 
@@ -213,13 +237,6 @@ terraform plan -out peering.plan \
 
 
 terraform apply "peering.plan"
-```
-If you want to destroy it:
-
-```bash
-# terraform destroy \
-#   -var "owner=$(echo "$OWNER_JSON" | jq -c .)" \
-#   -var "accepter=$(echo "$ACCEPTER_JSON" | jq -c .)"
 ```
 
 ### 7. Install OpenShift ACM and Submariner
@@ -525,11 +542,77 @@ zbctl status --insecure --address localhost:26500
 
 ### 11. Cleanup
 
-To uninstall the Helm releases and clean up resources:
+To completely uninstall and clean up the resources created across clusters, follow these steps:
+
+#### 1. Uninstall Helm Releases
+
+First, uninstall the Helm releases from both clusters to remove any installed services or applications:
 
 ```bash
 helm uninstall $HELM_RELEASE_NAME --kube-context $CLUSTER_0 --namespace $CAMUNDA_NAMESPACE_0
 helm uninstall $HELM_RELEASE_NAME --kube-context $CLUSTER_1 --namespace $CAMUNDA_NAMESPACE_1
 ```
 
-You may also delete the namespaces and the associated data.
+#### 2. Remove VPC Peering Resources
+
+To delete the VPC peering resources, run the following commands:
+
+```bash
+cd dual/peering
+
+# refer to the installation step for the OWNER_JSON and ACCEPTER_JSON vars
+terraform plan -destroy -out peering-destroy.plan \
+  -var "owner=$(echo "$OWNER_JSON" | jq -c .)" \
+  -var "accepter=$(echo "$ACCEPTER_JSON" | jq -c .)"
+
+terraform apply "peering-destroy.plan"
+
+# Optionally Delete Terraform State File:
+# aws s3 rm s3://$TF_STATE_BUCKET_NAME/tfstate-$CLUSTER_0-$CLUSTER_1/peering.tfstate
+```
+
+#### 3. Delete Terraform Resources for Each Cluster
+
+To clean up the infrastructure created by Terraform for each cluster, navigate to the appropriate directories and destroy the resources:
+
+##### Cluster 0 Cleanup:
+
+```bash
+cd rosa-hcp-eu-central-1
+
+terraform plan -destroy -out rosa-destroy.plan -var "cluster_name=$CLUSTER_0" -var "htpasswd_password=$KUBEADMIN_PASSWORD" -var "offline_access_token=$RH_TOKEN" -var "replicas=4" -var "vpc_cidr_block=$CLUSTER_0_VPC_CIDR"  -var "machine_cidr_block=$CLUSTER_0_MACHINE_CIDR"  -var "service_cidr_block=$CLUSTER_0_SERVICE_CIDR"  -var "pod_cidr_block=$CLUSTER_0_POD_CIDR"
+
+terraform apply "rosa-destroy.plan"
+
+# Optionally Delete Terraform State File:
+# aws s3 rm s3://$TF_STATE_BUCKET_NAME/tfstate-$CLUSTER_0/$CLUSTER_0.tfstate
+```
+
+##### Cluster 1 Cleanup:
+
+```bash
+cd rosa-hcp-eu-west-1
+
+terraform plan -destroy -out rosa-destroy.plan -var "cluster_name=$CLUSTER_1" -var "htpasswd_password=$KUBEADMIN_PASSWORD" -var "offline_access_token=$RH_TOKEN" -var "replicas=4" -var "vpc_cidr_block=$CLUSTER_1_VPC_CIDR"  -var "machine_cidr_block=$CLUSTER_1_MACHINE_CIDR"  -var "service_cidr_block=$CLUSTER_1_SERVICE_CIDR"  -var "pod_cidr_block=$CLUSTER_1_POD_CIDR"
+
+terraform apply "rosa-destroy.plan"
+
+# Optionally Delete Terraform State File:
+# aws s3 rm s3://$TF_STATE_BUCKET_NAME/tfstate-$CLUSTER_1/$CLUSTER_1.tfstate
+```
+
+#### 4. Clean Up S3 Bucket and IAM Resources
+
+If an S3 bucket was created as part of the setup, you can remove it and clean up any related IAM resources:
+
+```bash
+cd dual/s3-es
+export AWS_REGION="$REGION_0"
+
+terraform plan -destroy -out s3-destroy.plan -var "cluster_name=$CLUSTER_0-$CLUSTER_1"
+
+terraform apply "s3-destroy.plan"
+
+# Optionally Delete Terraform State File:
+# aws s3 rm s3://$TF_STATE_BUCKET_NAME/tfstate-$CLUSTER_0-$CLUSTER_1-s3/bucket.tfstate
+```
