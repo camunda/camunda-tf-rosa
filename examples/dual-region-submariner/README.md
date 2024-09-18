@@ -175,7 +175,9 @@ CLUSTER_0_VPC_ID=$(aws ec2 describe-subnets --subnet-ids "$CLUSTER_0_SUBNET_ID" 
 CLUSTER_0_VPC_CIDR=$(aws ec2 describe-vpcs --vpc-ids "$CLUSTER_0_VPC_ID" --region "$CLUSTER_0_REGION" | jq -r '.Vpcs[0].CidrBlock')
 CLUSTER_0_ROUTE_TABLE_IDS=$(aws ec2 describe-route-tables --region "$CLUSTER_0_REGION" --filters "Name=vpc-id,Values=$CLUSTER_0_VPC_ID" --query "RouteTables[*].{ID:RouteTableId,Routes:Routes}")
 CLUSTER_0_PUBLIC_ROUTE_TABLE_ID=$(echo "$CLUSTER_0_ROUTE_TABLE_IDS" | jq -r '.[] | select((.Routes // []) | any(.GatewayId | (if . == null then false else startswith("igw-") end))) | .ID' | sort -u)
+
 CLUSTER_0_PRIVATE_ROUTE_TABLE_IDS=$(echo "$CLUSTER_0_ROUTE_TABLE_IDS" | jq -r '.[] | .ID' | grep -vxFf <(echo "$CLUSTER_0_ROUTE_TABLE_IDS" | jq -r '.[] | select((.Routes // []) | any(.GatewayId | (if . == null then false else startswith("igw-") end))) | .ID') | sort -u)
+
 CLUSTER_0_SECURITY_GROUP_ID=$(aws ec2 describe-security-groups --filters "Name=vpc-id,Values=$CLUSTER_0_VPC_ID" --region "$CLUSTER_0_REGION" | jq -r '.SecurityGroups[0].GroupId')
 CLUSTER_0_PRIVATE_ROUTE_TABLE_IDS_JSON=$(echo "$CLUSTER_0_PRIVATE_ROUTE_TABLE_IDS" | jq -R -s 'split("\n") | map(select(length > 0))')
 
@@ -187,7 +189,9 @@ CLUSTER_1_VPC_ID=$(aws ec2 describe-subnets --subnet-ids "$CLUSTER_1_SUBNET_ID" 
 CLUSTER_1_VPC_CIDR=$(aws ec2 describe-vpcs --vpc-ids "$CLUSTER_1_VPC_ID" --region "$CLUSTER_1_REGION" | jq -r '.Vpcs[0].CidrBlock')
 CLUSTER_1_ROUTE_TABLE_IDS=$(aws ec2 describe-route-tables --region "$CLUSTER_1_REGION" --filters "Name=vpc-id,Values=$CLUSTER_1_VPC_ID" --query "RouteTables[*].{ID:RouteTableId,Routes:Routes}")
 CLUSTER_1_PUBLIC_ROUTE_TABLE_ID=$(echo "$CLUSTER_1_ROUTE_TABLE_IDS" | jq -r '.[] | select((.Routes // []) | any(.GatewayId | (if . == null then false else startswith("igw-") end))) | .ID' | sort -u)
+
 CLUSTER_1_PRIVATE_ROUTE_TABLE_IDS=$(echo "$CLUSTER_1_ROUTE_TABLE_IDS" | jq -r '.[] | .ID' | grep -vxFf <(echo "$CLUSTER_1_ROUTE_TABLE_IDS" | jq -r '.[] | select((.Routes // []) | any(.GatewayId | (if . == null then false else startswith("igw-") end))) | .ID') | sort -u)
+
 CLUSTER_1_SECURITY_GROUP_ID=$(aws ec2 describe-security-groups --filters "Name=vpc-id,Values=$CLUSTER_1_VPC_ID" --region "$CLUSTER_1_REGION" | jq -r '.SecurityGroups[0].GroupId')
 CLUSTER_1_PRIVATE_ROUTE_TABLE_IDS_JSON=$(echo "$CLUSTER_1_PRIVATE_ROUTE_TABLE_IDS" | jq -R -s 'split("\n") | map(select(length > 0))')
 
@@ -284,9 +288,9 @@ kubectl --context "$CLUSTER_0" get managedclusters
 # Import CLUSTER_1
 SUB1_TOKEN=$(oc --context "$CLUSTER_1" whoami -t)
 
-CLUSTER_NAME="$CLUSTER_1" envsubst < submariner/managed-cluster.yml.tpl | kubectl --context "$CLUSTER_0" apply -f -
-CLUSTER_NAME="$CLUSTER_1" CLUSTER_TOKEN="$SUB1_TOKEN" CLUSTER_API="$CLUSTER_1_API_URL" envsubst < submariner/auto-import-cluster-secret.yml.tpl | kubectl --context "$CLUSTER_0" apply -f -
-CLUSTER_NAME="$CLUSTER_1" envsubst < submariner/klusterlet-config.yml.tpl | kubectl --context "$CLUSTER_0" apply -f -
+CLUSTER_NAME="$CLUSTER_1" envsubst < acm/managed-cluster.yml.tpl | kubectl --context "$CLUSTER_0" apply -f -
+CLUSTER_NAME="$CLUSTER_1" CLUSTER_TOKEN="$SUB1_TOKEN" CLUSTER_API="$CLUSTER_1_API_URL" envsubst < acm/auto-import-cluster-secret.yml.tpl | kubectl --context "$CLUSTER_0" apply -f -
+CLUSTER_NAME="$CLUSTER_1" envsubst < acm/klusterlet-config.yml.tpl | kubectl --context "$CLUSTER_0" apply -f -
 
 kubectl --context "$CLUSTER_0" get managedclusters
 # NAME            HUB ACCEPTED   MANAGED CLUSTER URLS                                 JOINED   AVAILABLE   AGE
