@@ -76,10 +76,24 @@ jobs:
                   tf-bucket-region: ${{ env.TF_S3_REGION }}
                   max-age-hours-cluster: ${{ env.MAX_AGE_HOURS_CLUSTER }}
 
+            # There are cases where the deletion of resources fails due to dependencies.
+            - name: Retry delete clusters
+              id: retry_delete_clusters
+              if: failure() && steps.delete_clusters.outcome == 'failure'
+              timeout-minutes: 125
+              uses: ./.github/actions/rosa-cleanup-clusters
+              env:
+                  RH_TOKEN: ${{ steps.secrets.outputs.RH_OPENSHIFT_TOKEN }}
+                  AWS_REGION: ${{ env.TESTS_AWS_REGION }}
+              with:
+                  tf-bucket: ${{ env.TF_S3_BUCKET }}
+                  tf-bucket-region: ${{ env.TF_S3_REGION }}
+                  max-age-hours-cluster: ${{ env.MAX_AGE_HOURS_CLUSTER }}
+
             - name: Notify in Slack in case of failure
               id: slack-notification
-              if: failure() && github.event_name == 'schedule'
-              uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@fe25bf36edcc03717275a4e05969cdb5483388df # main
+              if: failure() && github.event_name == 'schedule' && steps.retry_delete_clusters.outcome == 'failure'
+              uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@fd70dca436c5764e6e90fa6613e7f0adebb83b6d # main
               with:
                   vault_addr: ${{ secrets.VAULT_ADDR }}
                   vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
