@@ -5,16 +5,16 @@
 
 awscli 2.18.0
 
-golang 1.23.1
+golang 1.23.2
 
 just 1.36.0
 
 pre-commit 3.8.0
 
-terraform 1.9.6
+terraform 1.9.7
 
 terraform-docs 0.19.0
 
 tflint 0.53.0
 
-tfsec 1.28.10
+tfsec 1.28.11
