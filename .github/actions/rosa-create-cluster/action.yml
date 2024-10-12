@@ -36,7 +36,7 @@ inputs:
         description: Version of the OpenShift to install
         required: true
         # renovate: datasource=custom.rosa-camunda depName=red-hat-openshift versioning=semver
-        default: 4.16.14
+        default: 4.16.15
     replicas:
         description: Number of replicas for the ROSA cluster
         required: true
@@ -185,7 +185,7 @@ runs:
                 --public-access-block-configuration "BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
 
         - name: Checkout Repository rosa modules
-          uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+          uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4
           with:
               repository: camunda/camunda-tf-rosa
               ref: ${{ inputs.tf-modules-revision }}
