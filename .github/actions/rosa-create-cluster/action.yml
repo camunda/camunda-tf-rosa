@@ -36,7 +36,7 @@ inputs:
         description: Version of the OpenShift to install
         required: true
         # renovate: datasource=custom.rosa-camunda depName=red-hat-openshift versioning=semver
-        default: 4.16.15
+        default: 4.17.0
     replicas:
         description: Number of replicas for the ROSA cluster
         required: true
