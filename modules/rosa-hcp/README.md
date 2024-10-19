@@ -25,7 +25,7 @@
 | <a name="input_htpasswd_username"></a> [htpasswd\_username](#input\_htpasswd\_username) | htpasswd username | `string` | `"kubeadmin"` | no |
 | <a name="input_machine_cidr_block"></a> [machine\_cidr\_block](#input\_machine\_cidr\_block) | value of the CIDR block to use for the machine | `string` | `"10.0.0.0/18"` | no |
 | <a name="input_offline_access_token"></a> [offline\_access\_token](#input\_offline\_access\_token) | The Red Hat OCM API access token for your account | `string` | n/a | yes |
-| <a name="input_openshift_version"></a> [openshift\_version](#input\_openshift\_version) | The version of ROSA to be deployed | `string` | `"4.16.15"` | no |
+| <a name="input_openshift_version"></a> [openshift\_version](#input\_openshift\_version) | The version of ROSA to be deployed | `string` | `"4.17.0"` | no |
 | <a name="input_pod_cidr_block"></a> [pod\_cidr\_block](#input\_pod\_cidr\_block) | value of the CIDR block to use for the pods | `string` | `"10.0.64.0/18"` | no |
 | <a name="input_replicas"></a> [replicas](#input\_replicas) | The number of computer nodes to create. Must be a minimum of 2 for a single-AZ cluster, 3 for multi-AZ. | `string` | `"2"` | no |
 | <a name="input_service_cidr_block"></a> [service\_cidr\_block](#input\_service\_cidr\_block) | value of the CIDR block to use for the services | `string` | `"10.0.128.0/18"` | no |
