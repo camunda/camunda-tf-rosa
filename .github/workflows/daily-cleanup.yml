@@ -88,7 +88,7 @@ jobs:
               with:
                   tf-bucket: ${{ env.TF_S3_BUCKET }}
                   tf-bucket-region: ${{ env.TF_S3_REGION }}
-                  max-age-hours-cluster: ${{ env.MAX_AGE_HOURS_CLUSTER }}
+                  max-age-hours-cluster: 0 # the previous step alters the age and resets it to 0
 
             - name: Notify in Slack in case of failure
               id: slack-notification
