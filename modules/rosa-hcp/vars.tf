@@ -41,8 +41,21 @@ variable "offline_access_token" {
 
 variable "availability_zones_count" {
   type        = number
-  description = "The number of availability zones to use for the cluster (minimum 2)"
+  description = "The count of availability (minimum 2) zones to utilize within the specified AWS Region, where pairs of public and private subnets will be generated. Valid only when availability_zones variable is not provided. This value should not be updated, please create a new resource instead."
   default     = 2
+}
+
+variable "availability_zones" {
+  type        = list(string)
+  description = "A list of availability zones names in the region. This value should not be updated, please create a new resource instead"
+  default     = null
+}
+
+
+variable "aws_availability_zones" {
+  type        = list(string)
+  description = "The AWS availability zones where instances of the default worker machine pool are deployed. Leave empty for the installer to pick availability zones from the VPC `availability_zones` or `availability_zones_count`"
+  default     = []
 }
 
 variable "vpc_cidr_block" {

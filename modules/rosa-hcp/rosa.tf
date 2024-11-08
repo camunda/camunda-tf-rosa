@@ -25,7 +25,8 @@ module "rosa_hcp" {
 
 
   replicas               = var.replicas
-  aws_availability_zones = module.vpc.availability_zones
+  aws_availability_zones = length(var.aws_availability_zones) > 0 ? var.aws_availability_zones : module.vpc.availability_zones
+
   aws_subnet_ids = concat(
     module.vpc.public_subnets, module.vpc.private_subnets,
   )
@@ -61,8 +62,10 @@ module "vpc" {
   source  = "terraform-redhat/rosa-hcp/rhcs//modules/vpc"
   version = "1.6.4"
 
-  name_prefix              = var.cluster_name
-  availability_zones_count = var.availability_zones_count
+  name_prefix = var.cluster_name
+
+  availability_zones_count = var.availability_zones != null ? null : var.availability_zones_count
+  availability_zones       = var.availability_zones
 
   vpc_cidr = var.vpc_cidr_block
 }

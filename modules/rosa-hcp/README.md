@@ -17,7 +17,9 @@
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_availability_zones_count"></a> [availability\_zones\_count](#input\_availability\_zones\_count) | The number of availability zones to use for the cluster (minimum 2) | `number` | `2` | no |
+| <a name="input_availability_zones"></a> [availability\_zones](#input\_availability\_zones) | A list of availability zones names in the region. This value should not be updated, please create a new resource instead | `list(string)` | `null` | no |
+| <a name="input_availability_zones_count"></a> [availability\_zones\_count](#input\_availability\_zones\_count) | The count of availability (minimum 2) zones to utilize within the specified AWS Region, where pairs of public and private subnets will be generated. Valid only when availability\_zones variable is not provided. This value should not be updated, please create a new resource instead. | `number` | `2` | no |
+| <a name="input_aws_availability_zones"></a> [aws\_availability\_zones](#input\_aws\_availability\_zones) | The AWS availability zones where instances of the default worker machine pool are deployed. Leave empty for the installer to pick availability zones from the VPC `availability_zones` or `availability_zones_count` | `list(string)` | `[]` | no |
 | <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | The name of the ROSA cluster to create | `string` | `"my-ocp-cluster"` | no |
 | <a name="input_compute_node_instance_type"></a> [compute\_node\_instance\_type](#input\_compute\_node\_instance\_type) | The EC2 instance type to use for compute nodes | `string` | `"m5.xlarge"` | no |
 | <a name="input_host_prefix"></a> [host\_prefix](#input\_host\_prefix) | The subnet mask to assign to each compute node in the cluster | `string` | `"23"` | no |
