@@ -3,9 +3,9 @@
 # check it with
 # diff <(sed '/^#/d; /^$/d' .tool-versions | sort) <(sed '/^#/d; /^$/d' .tool-versions) && echo ".tool-versions is sorted correctly" || echo ".tool-versions is not sorted correctly"
 
-awscli 2.19.1
+awscli 2.19.4
 
-golang 1.23.2
+golang 1.23.3
 
 just 1.36.0
 
@@ -15,6 +15,6 @@ terraform 1.9.8
 
 terraform-docs 0.19.0
 
-tflint 0.53.0
+tflint 0.54.0
 
 tfsec 1.28.11
