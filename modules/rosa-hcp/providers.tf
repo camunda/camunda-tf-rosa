@@ -11,8 +11,6 @@ terraform {
       source  = "terraform-redhat/rhcs"
     }
   }
-
-  backend "s3" {}
 }
 
 provider "rhcs" {
