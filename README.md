@@ -75,6 +75,7 @@ Please note that **Only a single AWS account that will be used for service billi
 
 To use this module with Terraform, follow these steps:
 
+0. **Create a Terraform provider configuration file** (e.g., `provider.tf`) and copy the content of `[modules/fixtures/backend.tf](modules/fixtures/backend.tf)`
 1. **Create a Terraform configuration file** (e.g., `main.tf`).
 2. **Include the ROSA HCP module** in your configuration file.
 
