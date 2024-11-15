@@ -20,6 +20,7 @@ on:
     pull_request:
         # the paths should be synced with ../labeler.yml
         paths:
+            - modules/fixtures/backend.tf
             - modules/fixtures/**/*.tf
             - modules/**.tf
             - .tool-versions

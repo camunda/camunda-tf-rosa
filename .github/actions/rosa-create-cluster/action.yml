@@ -197,6 +197,10 @@ runs:
           id: init
           working-directory: ${{ inputs.tf-modules-path }}/modules/rosa-hcp/
           run: |
+              set -euxo pipefail
+
+              cp ../fixtures/backend.tf ./
+
               terraform version
 
               terraform init \
