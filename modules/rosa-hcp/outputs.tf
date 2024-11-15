@@ -43,13 +43,7 @@ output "aws_caller_identity_account_id" {
   description = "The AWS account ID of the caller. This is the account under which the Terraform code is being executed."
 }
 
-
 output "oidc_provider_id" {
-  value       = replace(module.rosa_hcp.oidc_config_id, "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/", "")
-  description = "OIDC provider for the EKS cluster. Allows to add additional IRSA mappings."
-}
-
-output "oidc_provider_arn" {
   value       = module.rosa_hcp.oidc_config_id
-  description = "The ARN of the OIDC provider associated with the ROSA cluster, used for IAM roles with service account (IRSA) integration."
+  description = "OIDC provider for the OpenShift ROSA cluster. Allows to add additional IRSA mappings."
 }
