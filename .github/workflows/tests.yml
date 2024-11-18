@@ -83,7 +83,7 @@ jobs:
                       secret/data/products/infrastructure-experience/ci/common RH_OPENSHIFT_TOKEN;
                       secret/data/products/infrastructure-experience/ci/common CI_OPENSHIFT_MAIN_PASSWORD;
 
-      # Official action does not support profiles
+            # Official action does not support profiles
             - name: Add profile credentials to ~/.aws/credentials
               run: |
                   aws configure set aws_access_key_id ${{ steps.secrets.outputs.AWS_ACCESS_KEY }} --profile ${{ env.AWS_PROFILE }}
@@ -94,6 +94,8 @@ jobs:
               timeout-minutes: 125
               uses: ./.github/actions/rosa-create-cluster
               id: create_cluster
+              # Do not interrupt tests; otherwise, the Terraform state may become inconsistent.
+              if: always() && success()
               with:
                   rh-token: ${{ steps.secrets.outputs.RH_OPENSHIFT_TOKEN }}
                   cluster-name: ${{ steps.commit_info.outputs.cluster_name }}
