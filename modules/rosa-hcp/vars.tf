@@ -25,7 +25,7 @@ variable "replicas" {
 variable "compute_node_instance_type" {
   type        = string
   description = "The EC2 instance type to use for compute nodes"
-  default     = "m5.xlarge"
+  default     = "m7.xlarge"
 }
 
 variable "host_prefix" {
