@@ -50,7 +50,7 @@ aws iam create-service-linked-role --aws-service-name "elasticloadbalancing.amaz
 4. Generate an Offline token, click on "Load Token"
 ```bash
 export RHCS_TOKEN=yourToken
-rosa login
+rosa login --token="$RHCS_TOKEN"
 
 rosa whoami
 

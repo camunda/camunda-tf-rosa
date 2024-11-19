@@ -126,10 +126,8 @@ runs:
 
         - name: Login to Red Hat Hybrid Cloud Console
           shell: bash
-          env:
-              RHCS_TOKEN: ${{ inputs.rh-token }}
           run: |
-              rosa login --region="${{ inputs.aws-region }}"
+              rosa login --region="${{ inputs.aws-region }}" --token="${{ inputs.rh-token }}"
               rosa whoami --region="${{ inputs.aws-region }}"
 
         - name: Verify and enable HCP ROSA on AWS Marketplace
