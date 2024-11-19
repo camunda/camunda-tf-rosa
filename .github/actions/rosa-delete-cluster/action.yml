@@ -106,6 +106,8 @@ runs:
           shell: bash
           id: init
           working-directory: ${{ inputs.tf-modules-path }}/modules/rosa-hcp/
+          env:
+              RHCS_TOKEN: ${{ inputs.rh-token }}
           run: |
               set -euxo pipefail
 
@@ -135,6 +137,8 @@ runs:
           shell: bash
           id: apply-destroy
           working-directory: ${{ inputs.tf-modules-path }}/modules/rosa-hcp/
+          env:
+              RHCS_TOKEN: ${{ inputs.rh-token }}
           run: |
               terraform apply -destroy -no-color rosa-destroy.plan
 
