@@ -17,19 +17,25 @@ To start developing or testing the Rosa module, follow these steps:
      ```bash
      aws configure
      ```
+3. **Set your RHCS token:**
+   - Grab a token from https://console.redhat.com/openshift/token/rosa and set it as environment variable
+     ```bash
+     export RHCS_TOKEN="yourToken"
+     ```
 
 4. **Initialize Terraform:**
-   - Navigate to the module's directory and initialize Terraform:
+   - Navigate to the module's directory, copy the backend definition and initialize Terraform:
      ```bash
      cd modules/rosa-hcp
+     cp ../fixtures/backend.tf ./
      terraform init
      ```
 
 5. **Run Terraform Plan and Apply:**
    - You can now plan and apply the Terraform configuration to create the ROSA cluster:
      ```bash
-     terraform plan -var "cluster_name=your-cluster-name" -var "replicas=2" -var "htpasswd_password=your-password" -var "htpasswd_username=your-username" -var "offline_access_token=your-token" -var "openshift_version=your-openshift-version"
-     terraform apply -var "cluster_name=your-cluster-name" -var "replicas=2" -var "htpasswd_password=your-password" -var "htpasswd_username=your-username" -var "offline_access_token=your-token" -var "openshift_version=your-openshift-version"
+     terraform plan -var "cluster_name=your-cluster-name" -var "replicas=2" -var "htpasswd_password=your-password" -var "htpasswd_username=your-username" -var "openshift_version=your-openshift-version"
+     terraform apply -var "cluster_name=your-cluster-name" -var "replicas=2" -var "htpasswd_password=your-password" -var "htpasswd_username=your-username" -var "openshift_version=your-openshift-version"
      ```
 
 ## Tests in the CI

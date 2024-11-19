@@ -30,8 +30,8 @@ if [ "$#" -ne 4 ]; then
   exit 1
 fi
 # Check if required environment variables are set
-if [ -z "$RH_TOKEN" ]; then
-  echo "Error: The environment variable RH_TOKEN is not set."
+if [ -z "$RHCS_TOKEN" ]; then
+  echo "Error: The environment variable RHCS_TOKEN is not set."
   exit 1
 fi
 
@@ -75,7 +75,7 @@ destroy_cluster() {
   if ! terraform init -backend-config="bucket=$BUCKET" -backend-config="key=${cluster_folder}/${cluster_id}.tfstate" -backend-config="region=$AWS_S3_REGION"; then return 1; fi
 
 
-  if ! terraform destroy -auto-approve -var "cluster_name=${cluster_id}" -var "htpasswd_password=$HTPASSWD_PASSWORD" -var "offline_access_token=$RH_TOKEN"; then return 1; fi
+  if ! terraform destroy -auto-approve -var "cluster_name=${cluster_id}" -var "htpasswd_password=$HTPASSWD_PASSWORD"; then return 1; fi
 
   # Cleanup S3
   echo "Deleting s3://$BUCKET/$cluster_folder"

@@ -34,11 +34,6 @@ variable "host_prefix" {
   default     = "23"
 }
 
-variable "offline_access_token" {
-  type        = string
-  description = "The Red Hat OCM API access token for your account"
-}
-
 variable "availability_zones_count" {
   type        = number
   description = "The count of availability (minimum 2) zones to utilize within the specified AWS Region, where pairs of public and private subnets will be generated. Valid only when availability_zones variable is not provided. This value should not be updated, please create a new resource instead."
@@ -91,10 +86,4 @@ variable "htpasswd_password" {
   type        = string
   description = "htpasswd password"
   sensitive   = true
-}
-
-variable "url" {
-  type        = string
-  description = "Provide OCM environment by setting a value to url"
-  default     = "https://api.openshift.com"
 }

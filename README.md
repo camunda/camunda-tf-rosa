@@ -49,8 +49,8 @@ aws iam create-service-linked-role --aws-service-name "elasticloadbalancing.amaz
 3. Login onto [Red Hat Hybrid Cloud Console](https://console.redhat.com/openshift/token)
 4. Generate an Offline token, click on "Load Token"
 ```bash
-export RH_TOKEN=yourToken
-rosa login --token=${RH_TOKEN}
+export RHCS_TOKEN=yourToken
+rosa login
 
 rosa whoami
 
@@ -75,7 +75,7 @@ Please note that **Only a single AWS account that will be used for service billi
 
 To use this module with Terraform, follow these steps:
 
-0. **Create a Terraform provider configuration file** (e.g., `provider.tf`) and copy the content of `[modules/fixtures/backend.tf](modules/fixtures/backend.tf)`
+0. **Create a Terraform provider configuration file** (e.g., `provider.tf`) and copy the content of `[modules/fixtures/backend.tf](modules/fixtures/backend.tf)`, ensure that `RHCS_URL` is set as an environment variable with the token previously loaded from the console.
 1. **Create a Terraform configuration file** (e.g., `main.tf`).
 2. **Include the ROSA HCP module** in your configuration file.
 
@@ -87,7 +87,6 @@ module "rosa_hcp" {
 
   cluster_name           = "my-ocp-cluster"
   htpasswd_password      = "your_password"
-  offline_access_token   = "your_ocm_token" # see below for instructions
   openshift_version      = "4.15.11"
   replicas               = "2"
 }
