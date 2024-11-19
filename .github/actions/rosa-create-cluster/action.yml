@@ -127,7 +127,7 @@ runs:
         - name: Login to Red Hat Hybrid Cloud Console
           shell: bash
           run: |
-              rosa login --token=${{ inputs.rh-token }} --region="${{ inputs.aws-region }}"
+              rosa login --region="${{ inputs.aws-region }}" --token="${{ inputs.rh-token }}"
               rosa whoami --region="${{ inputs.aws-region }}"
 
         - name: Verify and enable HCP ROSA on AWS Marketplace
@@ -196,7 +196,13 @@ runs:
           shell: bash
           id: init
           working-directory: ${{ inputs.tf-modules-path }}/modules/rosa-hcp/
+          env:
+              RHCS_TOKEN: ${{ inputs.rh-token }}
           run: |
+              set -euxo pipefail
+
+              cp ../fixtures/backend.tf ./
+
               terraform version
 
               terraform init \
@@ -210,19 +216,22 @@ runs:
           shell: bash
           id: plan
           working-directory: ${{ inputs.tf-modules-path }}/modules/rosa-hcp/
+          env:
+              RHCS_TOKEN: ${{ inputs.rh-token }}
           run: |
               terraform plan -no-color -out rosa.plan \
               -var "cluster_name=${{ inputs.cluster-name }}" \
               -var "replicas=${{ inputs.replicas }}" \
               -var "htpasswd_password=${{ inputs.admin-password }}" \
               -var "htpasswd_username=${{ inputs.admin-username }}" \
-              -var "offline_access_token=${{ inputs.rh-token }}" \
               -var "openshift_version=${{ inputs.openshift-version }}"
 
         - name: Terraform Apply
           shell: bash
           id: apply
           working-directory: ${{ inputs.tf-modules-path }}/modules/rosa-hcp/
+          env:
+              RHCS_TOKEN: ${{ inputs.rh-token }}
           run: |
               terraform apply -no-color rosa.plan
 
