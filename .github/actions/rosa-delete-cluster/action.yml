@@ -106,7 +106,13 @@ runs:
           shell: bash
           id: init
           working-directory: ${{ inputs.tf-modules-path }}/modules/rosa-hcp/
+          env:
+              RHCS_TOKEN: ${{ inputs.rh-token }}
           run: |
+              set -euxo pipefail
+
+              cp ../fixtures/backend.tf ./
+
               terraform version
 
               terraform init \
@@ -120,16 +126,19 @@ runs:
           shell: bash
           id: plan-destroy
           working-directory: ${{ inputs.tf-modules-path }}/modules/rosa-hcp/
+          env:
+              RHCS_TOKEN: ${{ inputs.rh-token }}
           run: |
               terraform plan -destroy -no-color -out rosa-destroy.plan \
                 -var "cluster_name=${{ inputs.cluster-name }}" \
-                -var "offline_access_token=${{ inputs.rh-token }}" \
                 -var "htpasswd_password=dUmmyPassword$123!"
 
         - name: Terraform Apply Destroy
           shell: bash
           id: apply-destroy
           working-directory: ${{ inputs.tf-modules-path }}/modules/rosa-hcp/
+          env:
+              RHCS_TOKEN: ${{ inputs.rh-token }}
           run: |
               terraform apply -destroy -no-color rosa-destroy.plan
 

@@ -57,7 +57,7 @@ jobs:
                       secret/data/products/infrastructure-experience/ci/common AWS_SECRET_KEY;
                       secret/data/products/infrastructure-experience/ci/common RH_OPENSHIFT_TOKEN;
 
-      # Official action does not support profiles
+            # Official action does not support profiles
             - name: Add profile credentials to ~/.aws/credentials
               run: |
                   aws configure set aws_access_key_id ${{ steps.secrets.outputs.AWS_ACCESS_KEY }} --profile ${{ env.AWS_PROFILE }}
@@ -69,7 +69,7 @@ jobs:
               timeout-minutes: 125
               uses: ./.github/actions/rosa-cleanup-clusters
               env:
-                  RH_TOKEN: ${{ steps.secrets.outputs.RH_OPENSHIFT_TOKEN }}
+                  RHCS_TOKEN: ${{ steps.secrets.outputs.RH_OPENSHIFT_TOKEN }}
                   AWS_REGION: ${{ env.TESTS_AWS_REGION }}
               with:
                   tf-bucket: ${{ env.TF_S3_BUCKET }}
@@ -83,7 +83,7 @@ jobs:
               timeout-minutes: 125
               uses: ./.github/actions/rosa-cleanup-clusters
               env:
-                  RH_TOKEN: ${{ steps.secrets.outputs.RH_OPENSHIFT_TOKEN }}
+                  RHCS_TOKEN: ${{ steps.secrets.outputs.RH_OPENSHIFT_TOKEN }}
                   AWS_REGION: ${{ env.TESTS_AWS_REGION }}
               with:
                   tf-bucket: ${{ env.TF_S3_BUCKET }}

@@ -25,18 +25,13 @@ variable "replicas" {
 variable "compute_node_instance_type" {
   type        = string
   description = "The EC2 instance type to use for compute nodes"
-  default     = "m5.xlarge"
+  default     = "m7i.xlarge"
 }
 
 variable "host_prefix" {
   type        = string
   description = "The subnet mask to assign to each compute node in the cluster"
   default     = "23"
-}
-
-variable "offline_access_token" {
-  type        = string
-  description = "The Red Hat OCM API access token for your account"
 }
 
 variable "availability_zones_count" {
@@ -91,10 +86,4 @@ variable "htpasswd_password" {
   type        = string
   description = "htpasswd password"
   sensitive   = true
-}
-
-variable "url" {
-  type        = string
-  description = "Provide OCM environment by setting a value to url"
-  default     = "https://api.openshift.com"
 }
