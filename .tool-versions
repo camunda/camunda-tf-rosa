@@ -7,7 +7,7 @@ awscli 2.22.12
 
 golang 1.23.4
 
-just 1.37.0
+just 1.38.0
 
 pre-commit 4.0.1
 
