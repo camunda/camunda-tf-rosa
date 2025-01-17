@@ -9,22 +9,24 @@ locals {
   }
 
   cluster_region = (
-    # Check if `availability_zones` is defined and not empty
-    var.availability_zones != null && length(var.availability_zones) > 0
-    ? substr(var.availability_zones[0], 0, length(var.availability_zones[0]) - 1) # Extract region from the first AZ
+    var.availability_zones == null
+    ? (
+      var.aws_availability_zones == null || length(var.aws_availability_zones) == 0
+      ? data.aws_region.current.name
+      : substr(var.aws_availability_zones[0], 0, length(var.aws_availability_zones[0]) - 1)
+    )
     : (
-      # Check if `aws_availability_zones` is defined and not empty
-      var.aws_availability_zones != null && length(var.aws_availability_zones) > 0
-      ? substr(var.aws_availability_zones[0], 0, length(var.aws_availability_zones[0]) - 1) # Extract region from the first AZ
-      : data.aws_region.current.name                                                        # Fallback to the default region
+      length(var.availability_zones) == 0
+      ? (
+        var.aws_availability_zones == null || length(var.aws_availability_zones) == 0
+        ? data.aws_region.current.name
+        : substr(var.aws_availability_zones[0], 0, length(var.aws_availability_zones[0]) - 1)
+      )
+      : substr(var.availability_zones[0], 0, length(var.availability_zones[0]) - 1)
     )
   )
 
-  availability_zones_count_computed = (
-    var.availability_zones != null && length(var.availability_zones) > 0
-    ? length(var.availability_zones) # If `availability_zones` is defined, use its length
-    : var.availability_zones_count   # Otherwise, use `availability_zones_count`
-  )
+  availability_zones_count_computed = var.availability_zones == null ? var.availability_zones_count : (length(var.availability_zones) > 0 ? length(var.availability_zones) : var.availability_zones_count)
 }
 
 data "external" "elastic_ip_quota" {
