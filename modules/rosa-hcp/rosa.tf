@@ -1,9 +1,51 @@
+data "aws_region" "current" {}
+
 locals {
   account_role_prefix  = "${var.cluster_name}-account"
   operator_role_prefix = "${var.cluster_name}-operator"
 
   tags = {
     "owner" = data.aws_caller_identity.current.arn
+  }
+
+  cluster_region = (
+    # Check if `availability_zones` is defined and not empty
+    length(var.availability_zones) > 0 && var.availability_zones != null
+    ? substr(var.availability_zones[0], 0, length(var.availability_zones[0]) - 1) # Extract region from the first AZ
+    : (
+      # Check if `aws_availability_zones` is defined and not empty
+      length(var.aws_availability_zones) > 0 && var.aws_availability_zones != null
+      ? substr(var.aws_availability_zones[0], 0, length(var.aws_availability_zones[0]) - 1) # Extract region from the first AZ
+      : data.aws_region.current.name                                                        # Fallback to the default region
+    )
+  )
+
+  availability_zones_count_computed = (
+    var.availability_zones != null && length(var.availability_zones) > 0
+    ? length(var.availability_zones) # If `availability_zones` is defined, use its length
+    : var.availability_zones_count   # Otherwise, use `availability_zones_count`
+  )
+}
+
+data "external" "elastic_ip_quota" {
+  program = ["bash", "./get_elastic_ips_quota.sh", local.cluster_region]
+}
+
+
+data "external" "elastic_ips_count" {
+  program = ["bash", "./get_elastic_ips_count.sh", local.cluster_region]
+}
+
+
+check "elastic_ip_quota_check" {
+  assert {
+    condition     = tonumber(data.external.elastic_ip_quota.result.quota) >= local.availability_zones_count_computed
+    error_message = "The Elastic IP quota is insufficient to cover all local availability zones (need: ${local.availability_zones_count_computed}, have: ${tonumber(data.external.elastic_ip_quota.result.quota)})."
+  }
+
+  assert {
+    condition     = (tonumber(data.external.elastic_ip_quota.result.quota) - tonumber(data.external.elastic_ips_count.result.elastic_ips_count)) >= local.availability_zones_count_computed
+    error_message = "Not enough available Elastic IPs to cover all local availability zones (need: ${local.availability_zones_count_computed}, have: ${(tonumber(data.external.elastic_ip_quota.result.quota) - tonumber(data.external.elastic_ips_count.result.elastic_ips_count))})."
   }
 }
 
