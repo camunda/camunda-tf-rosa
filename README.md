@@ -14,6 +14,7 @@ For more detailed usage and configuration options, please refer to the module's 
 
 To gather all specifics versions of this project, we use:
 - [asdf](https://asdf-vm.com/) version manager (see [installation](https://asdf-vm.com/guide/getting-started.html)).
+- bash: A command-line interpreter required for executing the verification scripts.
 - [just](https://github.com/casey/just) as a command runner
   - install it using asdf: `asdf plugin add just && asdf install just`
 
@@ -26,9 +27,12 @@ just --list
 ```
 
 * Terraform (installed by asdf)
+* [jq](https://jqlang.github.io/jq/download/) (installed by asdf)
 * AWS CLI (installed by asdf)
 * ROSA CLI ([installation guide](https://docs.openshift.com/rosa/rosa_install_access_delete_clusters/rosa_getting_started_iam/rosa-installing-rosa.html))
 * OpenShift CLI ([installation guide](https://docs.openshift.com/container-platform/latest/cli_reference/openshift_cli/getting-started-cli.html))
+
+These tools are required because **verification scripts** are used to ensure that resources can be deployed within AWS quotas. These scripts rely on `jq` to parse the JSON data returned by the AWS CLI and `bash` for executing conditional commands.
 
 ## Getting started : Create a ROSA HCP cluster
 
