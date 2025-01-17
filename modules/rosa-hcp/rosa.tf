@@ -10,11 +10,11 @@ locals {
 
   cluster_region = (
     # Check if `availability_zones` is defined and not empty
-    length(var.availability_zones) > 0 && var.availability_zones != null
+    var.availability_zones != null && length(var.availability_zones) > 0
     ? substr(var.availability_zones[0], 0, length(var.availability_zones[0]) - 1) # Extract region from the first AZ
     : (
       # Check if `aws_availability_zones` is defined and not empty
-      length(var.aws_availability_zones) > 0 && var.aws_availability_zones != null
+      var.aws_availability_zones != null && length(var.aws_availability_zones) > 0
       ? substr(var.aws_availability_zones[0], 0, length(var.aws_availability_zones[0]) - 1) # Extract region from the first AZ
       : data.aws_region.current.name                                                        # Fallback to the default region
     )
