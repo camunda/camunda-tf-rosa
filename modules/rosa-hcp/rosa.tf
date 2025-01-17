@@ -38,15 +38,25 @@ data "external" "elastic_ips_count" {
   program = ["bash", "./get_elastic_ips_count.sh", local.cluster_region]
 }
 
+# Data source to check if the VPC exists
+data "aws_vpc" "existing" {
+  filter {
+    name   = "tag:Name"
+    values = ["${var.cluster_name}-vpc"]
+  }
+}
+
 
 check "elastic_ip_quota_check" {
+  # Only check the condition when no existing vpc is there
+
   assert {
-    condition     = tonumber(data.external.elastic_ip_quota.result.quota) >= local.availability_zones_count_computed
+    condition     = length(data.aws_vpc.existing.ids) > 0 || tonumber(data.external.elastic_ip_quota.result.quota) >= local.availability_zones_count_computed
     error_message = "The Elastic IP quota is insufficient to cover all local availability zones (need: ${local.availability_zones_count_computed}, have: ${tonumber(data.external.elastic_ip_quota.result.quota)})."
   }
 
   assert {
-    condition     = (tonumber(data.external.elastic_ip_quota.result.quota) - tonumber(data.external.elastic_ips_count.result.elastic_ips_count)) >= local.availability_zones_count_computed
+    condition     = length(data.aws_vpc.existing.ids) > 0 || (tonumber(data.external.elastic_ip_quota.result.quota) - tonumber(data.external.elastic_ips_count.result.elastic_ips_count)) >= local.availability_zones_count_computed
     error_message = "Not enough available Elastic IPs to cover all local availability zones (need: ${local.availability_zones_count_computed}, have: ${(tonumber(data.external.elastic_ip_quota.result.quota) - tonumber(data.external.elastic_ips_count.result.elastic_ips_count))})."
   }
 }
