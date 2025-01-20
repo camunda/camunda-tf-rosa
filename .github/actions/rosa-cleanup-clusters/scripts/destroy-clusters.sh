@@ -61,11 +61,8 @@ destroy_cluster() {
   mkdir -p "$temp_dir" || return 1
   cp -a "$MODULES_DIR." "$temp_dir" || return 1
 
-  echo "debug"
-  tree "$MODULES_DIR"
-
   echo "Copying backend.tf in $temp_dir"
-  cp "${MODULES_DIR}fixtures/backend.tf" "$temp_dir/backend.tf" || return 1
+  cp "${MODULES_DIR}..fixtures/backend.tf" "$temp_dir/backend.tf" || return 1
 
   tree "$MODULES_DIR" "$temp_dir" || return 1
 
