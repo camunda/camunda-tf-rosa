@@ -61,6 +61,7 @@ destroy_cluster() {
   mkdir -p "$temp_dir" || return 1
   cp -a "$MODULES_DIR." "$temp_dir" || return 1
 
+  echo "debug"
   tree "$MODULES_DIR"
 
   echo "Copying backend.tf in $temp_dir"
