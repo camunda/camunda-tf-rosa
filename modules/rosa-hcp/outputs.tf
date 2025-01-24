@@ -47,7 +47,3 @@ output "oidc_provider_id" {
   value       = module.rosa_hcp.oidc_config_id
   description = "OIDC provider for the OpenShift ROSA cluster. Allows to add additional IRSA mappings."
 }
-
-output "cluster_region" {
-  value = local.cluster_region
-}
