@@ -14,7 +14,6 @@ inputs:
 
     max-age-hours-cluster:
         description: Maximum age of clusters in hours
-        required: false
         default: '20'
 
     rosa-cli-version:
@@ -27,7 +26,6 @@ inputs:
             The hostname of a HCP Terraform/Terraform Enterprise instance to place within the credentials block of the Terraform CLI configuration
             file. Defaults to `app.terraform.io`.
         default: app.terraform.io
-        required: false
 
     tf-cli-config-credentials-token:
         description: |
@@ -41,14 +39,12 @@ inputs:
             example `<1.13.0`) to install the latest version satisfying the constraint. A value of `latest` will install the latest version of Terraform
             CLI. Defaults to `latest`.
         default: latest
-        required: false
 
     tf-terraform-wrapper:
         description: |
             Whether or not to install a wrapper to wrap subsequent calls of the `terraform` binary and expose its STDOUT, STDERR, and exit code
             as outputs named `stdout`, `stderr`, and `exitcode` respectively. Defaults to `true`.
         default: 'true'
-        required: false
 
     openshift-version:
         description: Version of the OpenShift to install
