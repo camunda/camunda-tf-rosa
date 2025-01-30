@@ -14,7 +14,6 @@ For more detailed usage and configuration options, please refer to the module's 
 
 To gather all specifics versions of this project, we use:
 - [asdf](https://asdf-vm.com/) version manager (see [installation](https://asdf-vm.com/guide/getting-started.html)).
-- bash: A command-line interpreter required for executing the verification scripts.
 - [just](https://github.com/casey/just) as a command runner
   - install it using asdf: `asdf plugin add just && asdf install just`
 
