@@ -19,4 +19,4 @@ tflint 0.55.1
 
 tfsec 1.28.13
 
-trivy 0.58.2
+trivy 0.59.0
