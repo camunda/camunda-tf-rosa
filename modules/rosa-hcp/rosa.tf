@@ -1,9 +1,37 @@
+data "aws_region" "current" {}
+
 locals {
   account_role_prefix  = "${var.cluster_name}-account"
   operator_role_prefix = "${var.cluster_name}-operator"
 
   tags = {
     "owner" = data.aws_caller_identity.current.arn
+  }
+
+  availability_zones_count_computed = var.availability_zones == null ? var.availability_zones_count : (length(var.availability_zones) > 0 ? length(var.availability_zones) : var.availability_zones_count)
+}
+
+data "aws_servicequotas_service_quota" "elastic_ip_quota" {
+  service_code = "ec2"
+  quota_code   = "L-0263D0A3" # Quota code for Elastic IP addresses per region
+}
+
+
+data "aws_eips" "current_usage" {}
+
+# Data source to check if the VPC exists
+data "aws_vpcs" "current_vpcs" {
+  tags = {
+    Name = "${var.cluster_name}-vpc"
+  }
+}
+
+check "elastic_ip_quota_check" {
+
+  # Only check the condition when no existing vpc is there.
+  assert {
+    condition     = length(data.aws_vpcs.current_vpcs.ids) > 0 || (data.aws_servicequotas_service_quota.elastic_ip_quota.value - length(data.aws_eips.current_usage.public_ips)) >= local.availability_zones_count_computed
+    error_message = "Not enough available Elastic IPs to cover all local availability zones (need: ${local.availability_zones_count_computed}, have: ${(data.aws_servicequotas_service_quota.elastic_ip_quota.value - length(data.aws_eips.current_usage.public_ips))})."
   }
 }
 

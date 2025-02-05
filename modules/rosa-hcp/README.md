@@ -13,6 +13,10 @@
 | Name | Type |
 |------|------|
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_eips.current_usage](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/eips) | data source |
+| [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
+| [aws_servicequotas_service_quota.elastic_ip_quota](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/servicequotas_service_quota) | data source |
+| [aws_vpcs.current_vpcs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/vpcs) | data source |
 ## Inputs
 
 | Name | Description | Type | Default | Required |
