@@ -22,6 +22,12 @@ variable "replicas" {
   default     = "2"
 }
 
+variable "private" {
+  type        = bool
+  description = "Restrict master API endpoint and application routes to direct, private connectivity."
+  default     = false
+}
+
 variable "compute_node_instance_type" {
   type        = string
   description = "The EC2 instance type to use for compute nodes"

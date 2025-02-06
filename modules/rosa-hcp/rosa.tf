@@ -35,13 +35,13 @@ check "elastic_ip_quota_check" {
   }
 }
 
-
 module "rosa_hcp" {
   source  = "terraform-redhat/rosa-hcp/rhcs"
   version = "1.6.5"
 
   openshift_version = var.openshift_version
   cluster_name      = var.cluster_name
+  private           = var.private
 
   compute_machine_type = var.compute_node_instance_type
   tags                 = local.tags
