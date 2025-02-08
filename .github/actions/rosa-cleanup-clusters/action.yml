@@ -50,7 +50,7 @@ inputs:
         description: Version of the OpenShift to install
         required: true
         # renovate: datasource=custom.rosa-camunda depName=red-hat-openshift versioning=semver
-        default: 4.17.12
+        default: 4.17.14
 
     awscli-version:
         description: Version of the aws cli to use
