@@ -17,7 +17,7 @@ This GitHub Action automates the deletion of ROSA (Red Hat OpenShift Service on 
 | `tf-cli-config-credentials-token` | <p>The API token for a HCP Terraform/Terraform Enterprise instance to place within the credentials block of the Terraform CLI configuration file.</p> | `false` | `""` |
 | `tf-terraform-version` | <p>The version of Terraform CLI to install. Instead of full version string you can also specify constraint string starting with "&lt;" (for example <code>&lt;1.13.0</code>) to install the latest version satisfying the constraint. A value of <code>latest</code> will install the latest version of Terraform CLI. Defaults to <code>latest</code>.</p> | `false` | `latest` |
 | `tf-terraform-wrapper` | <p>Whether or not to install a wrapper to wrap subsequent calls of the <code>terraform</code> binary and expose its STDOUT, STDERR, and exit code as outputs named <code>stdout</code>, <code>stderr</code>, and <code>exitcode</code> respectively. Defaults to <code>true</code>.</p> | `false` | `true` |
-| `openshift-version` | <p>Version of the OpenShift to install</p> | `true` | `4.17.15` |
+| `openshift-version` | <p>Version of the OpenShift to install</p> | `true` | `4.17.16` |
 | `awscli-version` | <p>Version of the aws cli to use</p> | `true` | `2.15.52` |
 
 
@@ -87,7 +87,7 @@ This action is a `composite` action.
     # Version of the OpenShift to install
     #
     # Required: true
-    # Default: 4.17.15
+    # Default: 4.17.16
 
     awscli-version:
     # Version of the aws cli to use
