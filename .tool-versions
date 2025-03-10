@@ -3,17 +3,17 @@
 # check it with
 # diff <(sed '/^#/d; /^$/d' .tool-versions | sort) <(sed '/^#/d; /^$/d' .tool-versions) && echo ".tool-versions is sorted correctly" || echo ".tool-versions is not sorted correctly"
 
-awscli 2.24.10
+awscli 2.24.20
 
-golang 1.24.0
+golang 1.24.1
 
 jq 1.7.1
 
-just 1.39.0
+just 1.40.0
 
 pre-commit 4.1.0
 
-terraform 1.10.5
+terraform 1.11.1
 
 terraform-docs 0.19.0
 
@@ -21,4 +21,4 @@ tflint 0.55.1
 
 tfsec 1.28.13
 
-trivy 0.59.1
+trivy 0.60.0
