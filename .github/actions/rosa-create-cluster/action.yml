@@ -98,6 +98,11 @@ outputs:
 runs:
     using: composite
     steps:
+        - name: Show deprecation warning
+          shell: bash
+          run: echo "::warning::The action is not maintained anymore through this repository. Please use https://github.com/camunda/camunda-deployment-references
+              instead."
+
         - name: Install ROSA CLI
           shell: bash
           run: |
