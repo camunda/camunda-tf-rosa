@@ -2,8 +2,9 @@
 name: Cluster creation and destruction test
 
 on:
-    schedule:
-        - cron: 0 1 * * 1 # At 01:00 on Monday.
+    # Disabled as part of deprecation of this repo
+    # schedule:
+    #     - cron: 0 1 * * 1 # At 01:00 on Monday.
 
     workflow_dispatch:
         inputs:
