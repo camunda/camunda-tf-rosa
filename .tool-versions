@@ -17,7 +17,7 @@ terraform 1.14.4
 
 terraform-docs 0.20.0
 
-tflint 0.56.0
+tflint 0.60.0
 
 tfsec 1.28.14
 
