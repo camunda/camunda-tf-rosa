@@ -37,7 +37,7 @@ check "elastic_ip_quota_check" {
 
 module "rosa_hcp" {
   source  = "terraform-redhat/rosa-hcp/rhcs"
-  version = "1.6.5"
+  version = "1.7.1"
 
   openshift_version = var.openshift_version
   cluster_name      = var.cluster_name
@@ -78,7 +78,7 @@ module "rosa_hcp" {
 
 module "htpasswd_idp" {
   source  = "terraform-redhat/rosa-hcp/rhcs//modules/idp"
-  version = "1.6.5"
+  version = "1.7.1"
 
   cluster_id         = module.rosa_hcp.cluster_id
   name               = "htpasswd-idp"
@@ -88,7 +88,7 @@ module "htpasswd_idp" {
 
 module "vpc" {
   source  = "terraform-redhat/rosa-hcp/rhcs//modules/vpc"
-  version = "1.6.5"
+  version = "1.7.1"
 
   name_prefix = var.cluster_name
 
