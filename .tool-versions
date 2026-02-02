@@ -19,6 +19,6 @@ terraform-docs 0.20.0
 
 tflint 0.56.0
 
-tfsec 1.28.13
+tfsec 1.28.14
 
 trivy 0.61.0
