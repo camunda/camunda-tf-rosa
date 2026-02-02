@@ -187,7 +187,7 @@ runs:
                 --public-access-block-configuration "BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
 
         - name: Checkout Repository rosa modules
-          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+          uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
           with:
               repository: camunda/camunda-tf-rosa
               ref: ${{ inputs.tf-modules-revision }}
